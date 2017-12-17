@@ -63,6 +63,9 @@ void ofApp::draw(){
     }
     
     panel.draw();
+	ofImage tempImage;
+	tempImage.setFromPixels(kinects[0]->getRgbPixels());
+	tempImage.draw(0,0);
 }
 
 //--------------------------------------------------------------

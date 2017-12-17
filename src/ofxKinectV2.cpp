@@ -127,6 +127,7 @@ void ofxKinectV2::update(){
         unlock();
         
         if( rawDepthPixels.size() > 0 ){
+			cout << "raw pixs are bigger than 0!" << endl;
             if( depthPix.getWidth() != rawDepthPixels.getWidth() ){
                 depthPix.allocate(rawDepthPixels.getWidth(), rawDepthPixels.getHeight(), 1);
             }
