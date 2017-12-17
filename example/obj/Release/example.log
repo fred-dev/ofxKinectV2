@@ -1,0 +1,122 @@
+﻿  main.cpp
+  ofApp.cpp
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(323): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(328): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(957): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(958): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(959): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(960): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\ofApp.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(323): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(328): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(957): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(958): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(959): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(960): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file src\main.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\libfreenect2/frame_listener.hpp(67): warning C4146: unary minus operator applied to unsigned type, result still unsigned (compiling source file src\ofApp.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\ofApp.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\ofApp.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\ofApp.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\ofApp.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\ofApp.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\ofApp.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\libfreenect2/frame_listener.hpp(67): warning C4146: unary minus operator applied to unsigned type, result still unsigned (compiling source file src\main.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\main.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\main.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\main.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\main.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file src\main.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file src\main.cpp)
+  ofxKinectV2.cpp
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(323): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(328): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(957): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(958): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(959): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(960): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\libfreenect2/frame_listener.hpp(67): warning C4146: unary minus operator applied to unsigned type, result still unsigned
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+..\..\..\addons\ofxKinectV2\src\ofxKinectV2.cpp(56): warning C4267: 'return': conversion from 'size_t' to 'unsigned int', possible loss of data
+..\..\..\addons\ofxKinectV2\src\ofxKinectV2.cpp(92): warning C4996: 'ofThread::startThread': Use tryLock instead of setting the type of lock on startThread
+  C:\Users\playback\Documents\openFrameworks\libs\openFrameworks\utils\ofThread.h(100): note: see declaration of 'ofThread::startThread'
+  command_transaction.cpp
+  event_loop.cpp
+  libfreenect2.cpp
+  transfer_pool.cpp
+  usb_control.cpp
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\usb_control.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp)
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\command_transaction.cpp(56): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\event_loop.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\libfreenect2/frame_listener.hpp(67): warning C4146: unary minus operator applied to unsigned type, result still unsigned (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp(162): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp(257): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp(263): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\transfer_pool.cpp(265): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\internal\libfreenect2/protocol/response.h(247): warning C4200: nonstandard extension used: zero-sized array in struct/union (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\internal\libfreenect2/protocol/response.h(247): note: This member will be ignored by a defaulted constructor or copy/move assignment operator (compiling source file ..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp)
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp(128): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp(129): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp(432): warning C4244: 'initializing': conversion from 'ssize_t' to 'int', possible loss of data
+..\..\..\addons\ofxKinectV2\libs\libfreenect2\src\libfreenect2.cpp(512): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  ofProtonect.cpp
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libfreenect2\include\libfreenect2/frame_listener.hpp(67): warning C4146: unary minus operator applied to unsigned type, result still unsigned
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(323): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(328): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(957): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(958): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(959): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\playback\documents\openframeworks\libs\openframeworks\math\ofMatrix4x4.h(960): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(739): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(770): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): warning C4200: nonstandard extension used: zero-sized array in struct/union
+  C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\libs\libusb\include\libusb\libusb.h(1263): note: This member will be ignored by a defaulted constructor or copy/move assignment operator
+     Creating library bin\example.lib and object bin\example.exp
+  Generating code
+  8 of 636 functions ( 1.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    9 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  example.vcxproj -> C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\example.exe
+  
+  	                   2	C:\Users\playback\Documents\openFrameworks\libs\fmodex\lib\vs\x64\
+  	  *EXTRA File 		 6402560	C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\FreeImage.dll
+  	  *EXTRA File 		  132608	C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\libusb-1.0.dll
+  
+  	                   1	C:\Users\playback\Documents\openFrameworks\libs\FreeImage\lib\vs\x64\
+  	  *EXTRA File 		 1503232	C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\fmodex64.dll
+  	  *EXTRA File 		 1552384	C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\fmodexL64.dll
+  	  *EXTRA File 		  132608	C:\Users\playback\Documents\openFrameworks\addons\ofxKinectV2\example\bin\libusb-1.0.dll

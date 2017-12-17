@@ -78,6 +78,7 @@ namespace libusb_ext
     uint16_t wIndex  = 0;
     uint16_t wLength = 0;
     uint8_t *data    = 0;
+	
 
     return libusb_control_transfer(handle, bmRequestType, bRequest, wValue, wIndex, data, wLength, timeout);
   }
