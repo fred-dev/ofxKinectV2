@@ -34,20 +34,37 @@ class ofxKinectV2 : public ofThread{
         void close();
     
         bool isFrameNew();
-    
+		ofVboMesh getMesh();
         ofPixels getDepthPixels();
         ofPixels getRgbPixels();
+		ofPixels getRegisteredPixels();
         ofFloatPixels getRawDepthPixels();
     
         ofParameterGroup params;
         ofParameter <float> minDistance;
         ofParameter <float> maxDistance;
 
+		static const int depth_w = ofProtonect::depth_w;
+		static const int depth_h = ofProtonect::depth_h;
+		ofProtonect &getProtonect() { return protonect; }
+
+		float getDistanceAt(int x, int y);
+		ofVec3f getWorldCoordinateAt(int x, int y);
+		ofVec3f getWorldCoordinateAt(int x, int y, float z);
+		void convertScreenToWorld(const vector<ofPoint> &pnt, vector<ofPoint> &pnt_world);
+	
+
+
+
+
+
+
     protected:
         void threadedFunction();
 
         ofPixels rgbPix;
         ofPixels depthPix;
+		ofPixels registeredPixels;
         ofFloatPixels rawDepthPixels;
     
         bool bNewBuffer;
@@ -58,6 +75,8 @@ class ofxKinectV2 : public ofThread{
     
         ofPixels rgbPixelsBack;
         ofPixels rgbPixelsFront;
+		ofPixels registeredPixelsFront;
+		ofPixels registeredPixelsBack;
         ofFloatPixels depthPixelsBack;
         ofFloatPixels depthPixelsFront;
         int lastFrameNo; 

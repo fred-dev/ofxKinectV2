@@ -105,7 +105,6 @@ void ofxKinectV2::threadedFunction(){
         protonect.updateKinect(rgbPixelsBack, depthPixelsBack);
         rgbPixelsFront.swap(rgbPixelsBack);
         depthPixelsFront.swap(depthPixelsBack);
-                
         lock();
         bNewBuffer = true;
         unlock();
@@ -127,7 +126,7 @@ void ofxKinectV2::update(){
         unlock();
         
         if( rawDepthPixels.size() > 0 ){
-			cout << "raw pixs are bigger than 0!" << endl;
+	
             if( depthPix.getWidth() != rawDepthPixels.getWidth() ){
                 depthPix.allocate(rawDepthPixels.getWidth(), rawDepthPixels.getHeight(), 1);
             }
@@ -136,7 +135,7 @@ void ofxKinectV2::update(){
             unsigned char * pixels  = depthPix.getData();
                 
             for(int i = 0; i < depthPix.size(); i++){
-                pixels[i] = ofMap(rawDepthPixels[i], minDistance, maxDistance, 255, 0, true);
+		               pixels[i] = ofMap(rawDepthPixels[i], minDistance, maxDistance, 255, 0, true);
                 if( pixels[i] == 255 ){
                     pixels[i] = 0;
                 }
@@ -148,7 +147,9 @@ void ofxKinectV2::update(){
         bNewFrame = true; 
     }
 }
-
+ofVboMesh ofxKinectV2::getMesh() {
+	return protonect.cloud;
+}
 //--------------------------------------------------------------------------------
 bool ofxKinectV2::isFrameNew(){
     return bNewFrame; 
@@ -163,7 +164,9 @@ ofPixels ofxKinectV2::getDepthPixels(){
 ofFloatPixels ofxKinectV2::getRawDepthPixels(){
     return rawDepthPixels;
 }
-
+ofPixels ofxKinectV2::getRegisteredPixels() {
+	return registeredPixels;
+}
 //--------------------------------------------------------------------------------
 ofPixels ofxKinectV2::getRgbPixels(){
     return rgbPix; 
@@ -178,4 +181,52 @@ void ofxKinectV2::close(){
     }
 }
 
+float ofxKinectV2::getDistanceAt(int x, int y) {
+	//Based on https://github.com/hanasaan/ofxMultiKinectV2
+    if (!depthPix.isAllocated()) {
+        return 0.0f;
+    }
+    return depthPix[x + y * depthPix.getWidth()]; // mm to cm
+}
+
+//--------------------------------------------------------------------------------
+ofVec3f ofxKinectV2::getWorldCoordinateAt(int x, int y) {
+	//Based on https://github.com/hanasaan/ofxMultiKinectV2
+	// TODO: use undistorted
+	return getWorldCoordinateAt(x, y, getDistanceAt(x, y));
+}
+
+//--------------------------------------------------------------------------------
+//https://github.com/hanasaan/ofxMultiKinectV2
+ofVec3f ofxKinectV2::getWorldCoordinateAt(int x, int y, float z) {
+	//Based on https://github.com/hanasaan/ofxMultiKinectV2
+	ofVec3f world;
+	if (bOpened) {
+		libfreenect2::Freenect2Device::IrCameraParams p = protonect.getIrCameraParams();
+		world.z = z;
+		world.x = (x - p.cx) * z / p.fx;
+		world.y = -(y - p.cy) * z / p.fy;
+	}
+	return world;
+}
+
+//--------------------------------------------------------------------------------
+void ofxKinectV2::convertScreenToWorld(const vector<ofPoint> &pnt, vector<ofPoint> &pnt_world) {
+	if (!bOpened) {
+		pnt_world.clear();
+		return;
+	}
+	libfreenect2::Freenect2Device::IrCameraParams param = protonect.getIrCameraParams();
+	int n = pnt.size();
+	pnt_world.resize(n);
+	for (int i = 0; i < n; i++) {
+		const ofPoint &in = pnt[i];
+		ofPoint &out = pnt_world[i];
+		out.z = in.z;
+		out.x = (in.x - param.cx) * in.z / param.fx;
+		out.y = -(in.y - param.cy) * in.z / param.fy;
+	}
+}
+
+//--------------------------------------------------------------------------------
 

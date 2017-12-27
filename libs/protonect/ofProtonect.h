@@ -32,7 +32,23 @@ class ofProtonect{
         libfreenect2::Freenect2 & getFreenect2Instance(){
             return freenect2;
         }
-  
+		libfreenect2::Freenect2Device::ColorCameraParams getColorCameraParams() {
+		
+			return this->getColorCameraParams();
+		}
+		libfreenect2::Freenect2Device::IrCameraParams getIrCameraParams() {
+		
+			return this->getIrCameraParams();
+		}
+
+		const static int depth_w = 512;
+		const static int depth_h = 424;
+
+		ofVboMesh cloud;
+		ofColor pointColour;
+		float colourHolder;
+		ofPoint pointLocation;
+
     protected:
   
         bool bOpened;
@@ -49,5 +65,9 @@ class ofProtonect{
         libfreenect2::Frame  * undistorted = NULL;
         libfreenect2::Frame  * registered = NULL;
         libfreenect2::Frame  * bigFrame = NULL;
+
+
+
+
 
 };

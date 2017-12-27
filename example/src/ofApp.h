@@ -25,6 +25,10 @@ class ofApp : public ofBaseApp{
     
         vector < shared_ptr<ofxKinectV2> > kinects;
     
-        vector <ofTexture> texDepth;
-        vector <ofTexture> texRGB;
+		vector <ofTexture> texDepth;
+		vector <ofTexture> texRGB;
+
+		ofEasyCam ecam;
+		ofFbo meshHolder;
+
 };

@@ -49,12 +49,12 @@ ofProtonect::ofProtonect(){
     }else{
         libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Warning));
     }
+
+
 }
 
 int ofProtonect::openKinect(string serial){
           
-//      pipeline = new libfreenect2::CpuPacketPipeline();
-//        pipeline = new libfreenect2::OpenGLPacketPipeline();
         pipeline = new libfreenect2::OpenCLPacketPipeline();
 
       if(pipeline)
@@ -70,9 +70,7 @@ int ofProtonect::openKinect(string serial){
 
     
       listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
-      undistorted = new libfreenect2::Frame(512, 424, 4);
-      registered  = new libfreenect2::Frame(512, 424, 4);
-
+   
       dev->setColorFrameListener(listener);
       dev->setIrAndDepthFrameListener(listener);
       dev->start();
@@ -81,9 +79,14 @@ int ofProtonect::openKinect(string serial){
       ofLogVerbose("ofProtonect::openKinect") << "device firmware: " << dev->getFirmwareVersion();
 
       registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
+	  undistorted = new libfreenect2::Frame(512, 424, 4);
+	  registered = new libfreenect2::Frame(512, 424, 4);
+	  bigFrame = new libfreenect2::Frame(1920, 1080 + 2, 4);
 
-    bOpened = true;
-    
+	 cloud.setMode(OF_PRIMITIVE_POINTS);
+
+
+	bOpened = true;
     return 0;
 }
 
@@ -95,8 +98,29 @@ void ofProtonect::updateKinect(ofPixels & rgbPixels, ofFloatPixels & depthPixels
         libfreenect2::Frame *ir = frames[libfreenect2::Frame::Ir];
         libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
 
+		
+		
         rgbPixels.setFromPixels(rgb->data, rgb->width, rgb->height, 3);
         depthPixels.setFromPixels((float *)depth->data, ir->width, ir->height, 1);
+		
+		registration->apply(rgb, depth, undistorted, registered, true, bigFrame);
+		cloud.clear();
+		for (int i = 0; i < registered->height; i++){
+			for (int j = 0; j < registered->width; j++) {
+				registration->getPointXYZRGB(undistorted, registered, j, i, pointLocation.x, pointLocation.y, pointLocation.z, colourHolder);
+				const uint8_t *p = reinterpret_cast<uint8_t*>(&colourHolder);
+				pointColour.r = p[2];
+				pointColour.g = p[1];
+				pointColour.b = p[0];
+
+				if (pointLocation.z>0 && pointLocation.z!= INFINITY)
+				{
+					cloud.addVertex( pointLocation*100);
+					cloud.addColor(pointColour);
+				}
+			
+			}
+		}
 
         listener->release(frames);
     }
