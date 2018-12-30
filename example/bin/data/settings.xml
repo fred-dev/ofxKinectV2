@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<group>
+	<kinectV2_112641634947>
+		<minDistance>500</minDistance>
+		<maxDistance>6000</maxDistance>
+		<exposureCompensation>0</exposureCompensation>
+		<pseudoExposureTime>0</pseudoExposureTime>
+		<expIntegrationTime>0</expIntegrationTime>
+		<analogueGain>1</analogueGain>
+	</kinectV2_112641634947>
+	<faces_length>0.01</faces_length>
+	<Steps>1</Steps>
+</group>

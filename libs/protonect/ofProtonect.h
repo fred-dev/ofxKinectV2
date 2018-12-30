@@ -10,64 +10,67 @@
 #include <libfreenect2/registration.h>
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
-#include <transfer_pool.h>
-#include <event_loop.h>
-#include "ofRGBPacketProcessor.h"
+#include <libfreenect2/color_settings.h>
 
 #include "ofAppGLFWWindow.h"
 #include "ofAppRunner.h"
 
-class ofProtonect{
+#include <GLFW/glfw3.h>
 
-    public:
+class ofProtonect
+{
+public:
+    enum class PacketPipelineType
+    {
+        DEFAULT,
+        CPU,
+        OPENGL,
+		OPENCL,
+		OPENCLKDE
+#if defined(LIBFREENECT2_WITH_CUDA_SUPPORT)
+        ,CUDA,
+        CUDAKDE
+#endif
+    };
 
-
+    ofProtonect();
     
-        ofProtonect();
+    int open(const std::string& serial,
+             PacketPipelineType packetPipelineType = PacketPipelineType::CUDA);
     
-        int openKinect(std::string serialNo);
-        void updateKinect(ofPixels & rgbPixels, ofFloatPixels & depthPixels);
-        int closeKinect();
-    
-        libfreenect2::Freenect2 & getFreenect2Instance(){
-            return freenect2;
-        }
-		libfreenect2::Freenect2Device::ColorCameraParams getColorCameraParams() {
-		
-			return this->getColorCameraParams();
-		}
-		libfreenect2::Freenect2Device::IrCameraParams getIrCameraParams() {
-		
-			return this->getIrCameraParams();
-		}
+    void updateKinect(ofPixels& rgbPixels,
+                      ofPixels& rgbRegisteredPixels,
+                      ofFloatPixels& depthPixels,
+                      ofFloatPixels& irPixels,
+                      ofFloatPixels& distancePixels);
 
-		const static int depth_w = 512;
-		const static int depth_h = 424;
+    int closeKinect();
 
-		ofVboMesh cloud;
-		ofColor pointColour;
-		float colourHolder;
-		ofPoint pointLocation;
 
-    protected:
+    libfreenect2::Freenect2& getFreenect2Instance()
+    {
+        return freenect2;
+    }
   
-        bool bOpened;
-        
-        libfreenect2::Freenect2 freenect2;
+protected:
+    bool enableRGB = true;
+    bool enableDepth = true;
+    int deviceId = -1;
 
-        libfreenect2::Freenect2Device *dev = 0;
-        libfreenect2::PacketPipeline *pipeline = 0;
+    bool bOpened = false;
+    
+    libfreenect2::Freenect2 freenect2;
 
-        libfreenect2::FrameMap frames;
+    libfreenect2::Freenect2Device* dev = nullptr;
+    libfreenect2::PacketPipeline* pipeline = nullptr;
 
-        libfreenect2::Registration* registration;
-        libfreenect2::SyncMultiFrameListener * listener;
-        libfreenect2::Frame  * undistorted = NULL;
-        libfreenect2::Frame  * registered = NULL;
-        libfreenect2::Frame  * bigFrame = NULL;
+    libfreenect2::FrameMap frames;
 
+    libfreenect2::Registration* registration = nullptr;
+    libfreenect2::SyncMultiFrameListener* listener = nullptr;
+    libfreenect2::Frame* undistorted = nullptr;
+    libfreenect2::Frame* registered = nullptr;
+    libfreenect2::Frame* bigFrame = nullptr;
 
-
-
-
+    friend class ofxKinectV2;
 };

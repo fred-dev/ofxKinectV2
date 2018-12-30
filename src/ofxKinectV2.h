@@ -8,76 +8,127 @@
 
 #pragma once
 
+
 #include "ofProtonect.h"
 #include "ofMain.h"
 
-class ofxKinectV2 : public ofThread{
 
-    public:
+class ofxKinectV2: public ofThread
+{
+public:
+    struct KinectDeviceInfo
+    {
+        std::string serial;
+        int deviceId;   //if you have the same devices plugged in device 0 will always be the same Kinect
+        int freenectId; //don't use this one - this is the index given by freenect2 - but this can change based on order device is plugged in
+    };
+
+    ofxKinectV2();
+    ~ofxKinectV2();
     
-        struct KinectDeviceInfo{
-            string serial;
-            int deviceId;   //if you have the same devices plugged in device 0 will always be the same Kinect
-            int freenectId; //don't use this one - this is the index given by freenect2 - but this can change based on order device is plugged in
-        };
+    //for some reason these can't be static - so you need to make a tmp object to query them
+    std::vector<KinectDeviceInfo> getDeviceList() const;
+    std::size_t getNumDevices() const;
 
-        ofxKinectV2();
-        ~ofxKinectV2(); 
-        
-        //for some reason these can't be static - so you need to make a tmp object to query them
-        vector <KinectDeviceInfo> getDeviceList();
-        unsigned int getNumDevices();
+    /// \brief Open the device with the given serial number.
+    /// \param serial The serial number to open.
+    /// \returns true if connected successfully.
+    bool open(const std::string& serial);
+
+    /// \brief Open the device with the given serial number.
+    /// \param deviceId The device id to open.
+    /// \returns true if connected successfully.
+    bool open(int deviceId = 0);
+
+    /// \brief Update the Kinect internals.
+    void update();
     
-        bool open(string serial);
-        bool open(unsigned int deviceId = 0);
-        void update();
-        void close();
+    /// \brief Close the connection to the Kinect.
+    void close();
+
+    /// \returns true if the frame has been updated.
+    bool isFrameNew() const;
+
+    OF_DEPRECATED_MSG("Use getPixels()", ofPixels getRgbPixels());
+
+    /// \returns the RGB pixels.
+    const ofPixels& getPixels() const;
+
+    /// \returns pixels registred to the depth image.
+    const ofPixels& getRegisteredPixels() const;
+
+    /// \returns the raw depth pixels.
+    const ofFloatPixels& getRawDepthPixels() const;
+
+    /// \returns the depth pixels mapped to a visible range.
+    const ofPixels& getDepthPixels() const;
+
+    /// \returns the raw IR pixels.
+    const ofFloatPixels& getRawIRPixels() const;
+
+    /// \returns the IR pixels mapped to a visible range.
+    const ofPixels& getIRPixels() const;
+
+    /// \returns the distance image. Each pixels is the distance in millimeters.
+    const ofFloatImage& getDistancePixels() const;
     
-        bool isFrameNew();
-		ofVboMesh getMesh();
-        ofPixels getDepthPixels();
-        ofPixels getRgbPixels();
-		ofPixels getRegisteredPixels();
-        ofFloatPixels getRawDepthPixels();
+    /// \brief Get the calulated distance for point x, y in the getRegisteredPixels image.
+    float getDistanceAt(std::size_t x, std::size_t y) const;
     
-        ofParameterGroup params;
-        ofParameter <float> minDistance;
-        ofParameter <float> maxDistance;
-
-		static const int depth_w = ofProtonect::depth_w;
-		static const int depth_h = ofProtonect::depth_h;
-		ofProtonect &getProtonect() { return protonect; }
-
-		float getDistanceAt(int x, int y);
-		ofVec3f getWorldCoordinateAt(int x, int y);
-		ofVec3f getWorldCoordinateAt(int x, int y, float z);
-		void convertScreenToWorld(const vector<ofPoint> &pnt, vector<ofPoint> &pnt_world);
-	
-
-
-
-
-
-
-    protected:
-        void threadedFunction();
-
-        ofPixels rgbPix;
-        ofPixels depthPix;
-		ofPixels registeredPixels;
-        ofFloatPixels rawDepthPixels;
+    /// \brief Get the world X, Y, Z coordinates in millimeters for x, y in getRegisteredPixels image.
+    glm::vec3 getWorldCoordinateAt(std::size_t x, std::size_t y) const;
     
-        bool bNewBuffer;
-        bool bNewFrame;
-        bool bOpened;
+    ofParameterGroup params;
+    ofParameter<float> minDistance;
+    ofParameter<float> maxDistance;
+
+	ofParameter<float> exposureCompensation;
+	ofParameter<float> pseudoExposureTime;
+	ofParameter<float> expIntegrationTime;
+	ofParameter<float> analogueGain;
+
+	 void setColorAutoExposureCallback(float & exposure_compensation);
+
+	/** Sets a flicker-free exposure time of the RGB camera in pseudo-ms, value in range [0.0, 640] ms.
+
+	* @param pseudo_exposure_time_ms Pseudo-exposure time in milliseconds, range (0.0, 66.0+]
+	*/
+	 void setColorSemiAutoExposureCallback(float & pseudo_exposure_time_ms);
+
+	/** Manually set true exposure time and analog gain of the RGB camera.
+	* @param integration_time_ms True shutter time in milliseconds, range (0.0, 66.0]
+	* @param analog_gain Analog gain, range [1.0, 4.0]
+	*/
+	 void setColorManualExposureCallback(float & integration_time_ms, float & analog_gain);
+
+protected:
+    void threadedFunction();
+
+    ofPixels pixels;
+    ofPixels registeredPixels;
+    ofFloatPixels rawDepthPixels;
+    ofPixels depthPixels;
+    ofFloatPixels distancePixels;
+
+    ofFloatPixels rawIRPixels;
+    ofPixels irPixels;
     
-        ofProtonect protonect; 
+    bool bNewBuffer = false;
+    bool bNewFrame = false;
+    bool bOpened = false;
+
+    mutable ofProtonect protonect;
     
-        ofPixels rgbPixelsBack;
-        ofPixels rgbPixelsFront;
-		ofPixels registeredPixelsFront;
-		ofPixels registeredPixelsBack;
-        ofFloatPixels depthPixelsBack;
-        ofFloatPixels depthPixelsFront;
-        int lastFrameNo; 
+    ofPixels pixelsBack;
+    ofPixels pixelsFront;
+    ofPixels registeredPixelsBack;
+    ofPixels registeredPixelsFront;
+    ofFloatPixels rawDepthPixelsBack;
+    ofFloatPixels rawDepthPixelsFront;
+    ofFloatPixels rawIRPixelsBack;
+    ofFloatPixels rawIRPixelsFront;
+    ofFloatPixels distancePixelsFront;
+    ofFloatPixels distancePixelsBack;
+
+    int lastFrameNo = -1;
 };

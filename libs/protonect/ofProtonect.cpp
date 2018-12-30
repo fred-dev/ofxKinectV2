@@ -30,123 +30,181 @@
  * either License.
  */
 
-#include <iostream>
-#include <signal.h>
 
+#include "ofProtonect.h"
+//#include <iostream>
+//#include <signal.h>
 #include <libfreenect2/libfreenect2.hpp>
 #include <libfreenect2/frame_listener_impl.h>
 #include <libfreenect2/registration.h>
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
 
-#include "ofProtonect.h"
 
-ofProtonect::ofProtonect(){
-    bOpened = false;
-
-    if( ofGetLogLevel() == OF_LOG_VERBOSE ){
+ofProtonect::ofProtonect()
+{
+    if (ofGetLogLevel() == OF_LOG_VERBOSE)
+    {
         libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Debug));
-    }else{
+    }
+    else
+    {
         libfreenect2::setGlobalLogger(libfreenect2::createConsoleLogger(libfreenect2::Logger::Warning));
     }
-
-
 }
 
-int ofProtonect::openKinect(string serial){
-          
-        pipeline = new libfreenect2::OpenCLPacketPipeline();
+int ofProtonect::open(const std::string& serial, PacketPipelineType packetPipelineType)
+{
+    switch (packetPipelineType)
+    {
+        case PacketPipelineType::CPU:
+            pipeline = new libfreenect2::CpuPacketPipeline();
+            break;
+        case PacketPipelineType::OPENGL:
+            pipeline = new libfreenect2::OpenGLPacketPipeline();
+            break;
+		case PacketPipelineType::OPENCL:
+			pipeline = new libfreenect2::OpenCLPacketPipeline();
+			break;
+		case PacketPipelineType::OPENCLKDE:
+			pipeline = new libfreenect2::OpenCLKdePacketPipeline();
+			break;
+#if defined(LIBFREENECT2_WITH_CUDA_SUPPORT)
+		
+        case PacketPipelineType::CUDA:
+			pipeline = new libfreenect2::CudaPacketPipeline(deviceId);
+            break;
+        case PacketPipelineType::CUDAKDE:
+            pipeline = new libfreenect2::CudaKdePacketPipeline(deviceId);
+            break;
+#endif
+        case PacketPipelineType::DEFAULT:
+            break;
+    }
 
-      if(pipeline)
-      {
+    if (pipeline)
+    {
         dev = freenect2.openDevice(serial, pipeline);
-      }
+    }
+    else
+    {
+        dev = freenect2.openDevice(serial);
+    }
 
-      if(dev == 0)
-      {
+    if (!dev)
+    {
         ofLogError("ofProtonect::openKinect")  << "failure opening device with serial " << serial;
         return -1;
-      }
+    }
 
+    int types = 0;
     
-      listener = new libfreenect2::SyncMultiFrameListener(libfreenect2::Frame::Color | libfreenect2::Frame::Ir | libfreenect2::Frame::Depth);
-   
-      dev->setColorFrameListener(listener);
-      dev->setIrAndDepthFrameListener(listener);
-      dev->start();
+    if (enableRGB)
+        types |= libfreenect2::Frame::Color;
+    if (enableDepth)
+        types |= libfreenect2::Frame::Ir | libfreenect2::Frame::Depth;
+    
+    listener = new libfreenect2::SyncMultiFrameListener(types);
+    
+    dev->setColorFrameListener(listener);
+    dev->setIrAndDepthFrameListener(listener);
+    
+    /// [start]
+    if (enableRGB && enableDepth)
+    {
+        if (!dev->start())
+        {
+            ofLogError("ofProtonect::openKinect")  << "Error starting default stream for: " << serial;
+            return -1;
+        }
+    }
+    else
+    {
+        if (!dev->startStreams(enableRGB, enableDepth))
+        {
+            ofLogError("ofProtonect::openKinect")  << "Error starting selected streams for: " << serial;
+            return -1;
+        }
+    }
 
-      ofLogVerbose("ofProtonect::openKinect") << "device serial: " << dev->getSerialNumber();
-      ofLogVerbose("ofProtonect::openKinect") << "device firmware: " << dev->getFirmwareVersion();
+    ofLogVerbose("ofProtonect::openKinect") << "device serial: " << dev->getSerialNumber();
+    ofLogVerbose("ofProtonect::openKinect") << "device firmware: " << dev->getFirmwareVersion();
 
-      registration = new libfreenect2::Registration(dev->getIrCameraParams(), dev->getColorCameraParams());
-	  undistorted = new libfreenect2::Frame(512, 424, 4);
-	  registered = new libfreenect2::Frame(512, 424, 4);
-	  bigFrame = new libfreenect2::Frame(1920, 1080 + 2, 4);
-
-	 cloud.setMode(OF_PRIMITIVE_POINTS);
-
-
-	bOpened = true;
+    registration = new libfreenect2::Registration(dev->getIrCameraParams(),
+                                                  dev->getColorCameraParams());
+    undistorted = new libfreenect2::Frame(512, 424, 4);
+    registered = new libfreenect2::Frame(512, 424, 4);
+    
+    bOpened = true;
+    
     return 0;
 }
 
-void ofProtonect::updateKinect(ofPixels & rgbPixels, ofFloatPixels & depthPixels){
-  
-    if(bOpened){
-        listener->waitForNewFrame(frames);
-        libfreenect2::Frame *rgb = frames[libfreenect2::Frame::Color];
-        libfreenect2::Frame *ir = frames[libfreenect2::Frame::Ir];
-        libfreenect2::Frame *depth = frames[libfreenect2::Frame::Depth];
+void ofProtonect::updateKinect(ofPixels& rgbPixels,
+                               ofPixels& rgbRegisteredPixels,
+                               ofFloatPixels& depthPixels,
+                               ofFloatPixels& irPixels,
+                               ofFloatPixels& distancePixels)
+{
+    if (bOpened)
+    {
+        if (!listener->waitForNewFrame(frames, 10 * 1000))
+        {
+            ofLogError("ofProtonect::updateKinect") << "Timeout serial: " << dev->getSerialNumber();
+            return;
+        }
 
-		
-		
-        rgbPixels.setFromPixels(rgb->data, rgb->width, rgb->height, 3);
-        depthPixels.setFromPixels((float *)depth->data, ir->width, ir->height, 1);
-		
-		registration->apply(rgb, depth, undistorted, registered, true, bigFrame);
-		cloud.clear();
-		for (int i = 0; i < registered->height; i++){
-			for (int j = 0; j < registered->width; j++) {
-				registration->getPointXYZRGB(undistorted, registered, j, i, pointLocation.x, pointLocation.y, pointLocation.z, colourHolder);
-				const uint8_t *p = reinterpret_cast<uint8_t*>(&colourHolder);
-				pointColour.r = p[2];
-				pointColour.g = p[1];
-				pointColour.b = p[0];
+        libfreenect2::Frame* rgb = frames[libfreenect2::Frame::Color];
+        libfreenect2::Frame* ir = frames[libfreenect2::Frame::Ir];
+        libfreenect2::Frame* depth = frames[libfreenect2::Frame::Depth];
 
-				if (pointLocation.z>0 && pointLocation.z!= INFINITY)
-				{
-					cloud.addVertex( pointLocation*100);
-					cloud.addColor(pointColour);
-				}
-			
-			}
-		}
+        if (enableRGB && enableDepth)
+        {
+            registration->apply(rgb,
+                                depth,
+                                undistorted,
+                                registered);
+        }
+
+        ofPixelFormat rgbFormat;
+        if (rgb->format == libfreenect2::Frame::BGRX)
+        {
+            rgbFormat = OF_PIXELS_BGRA;
+        }
+        else
+        {
+            rgbFormat = OF_PIXELS_RGBA;
+        }
+        
+        rgbPixels.setFromPixels(rgb->data, rgb->width, rgb->height, rgbFormat);
+        rgbRegisteredPixels.setFromPixels(registered->data, registered->width, registered->height, rgbFormat);
+
+        depthPixels.setFromPixels(reinterpret_cast<float*>(depth->data), ir->width, ir->height, 1);
+        irPixels.setFromPixels(reinterpret_cast<float*>(ir->data), ir->width, ir->height, 1);
 
         listener->release(frames);
     }
 }
 
-int ofProtonect::closeKinect(){
-
-  if(bOpened){
+int ofProtonect::closeKinect()
+{
+  if (bOpened)
+  {
       listener->release(frames);
 
       // TODO: restarting ir stream doesn't work!
       // TODO: bad things will happen, if frame listeners are freed before dev->stop() :(
       dev->stop();
       dev->close();
-      
-      delete listener;
-      listener = NULL;
-      
-      delete undistorted;
-      undistorted = NULL;
 
+      delete dev;
+      delete pipeline;
+      delete listener;
+      delete undistorted;
       delete registered;
-      registered = NULL;
-      
       delete registration;
-      bOpened = false; 
+      //delete bigFrame;
+      bOpened = false;
   }
 
   return 0;
