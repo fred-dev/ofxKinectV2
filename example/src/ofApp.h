@@ -37,6 +37,5 @@ public:
     ofEasyCam cam;
    std::vector<ofVboMesh> pointClouds;
     bool showPointCloud = false;
-	ofParameter<float> facesMaxLength;
-	ofParameter<int> steps;
+
 };

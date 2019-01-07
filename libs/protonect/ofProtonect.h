@@ -38,11 +38,18 @@ public:
     int open(const std::string& serial,
              PacketPipelineType packetPipelineType = PacketPipelineType::CUDA);
     
+
     void updateKinect(ofPixels& rgbPixels,
                       ofPixels& rgbRegisteredPixels,
                       ofFloatPixels& depthPixels,
                       ofFloatPixels& irPixels,
                       ofFloatPixels& distancePixels);
+
+	void updateKinect(ofPixels& rgbPixels,
+		ofPixels& rgbRegisteredPixels,
+		ofFloatPixels& depthPixels,
+		ofFloatPixels& irPixels,
+		ofFloatPixels& distancePixels, std::vector<glm::vec3>& pcVerts, std::vector<ofDefaultColorType>& pcColors, std::vector<ofIndexType>& pcIndicies,  std::vector<glm::vec2>& pcTexCoords,int steps, float minDistance, float maxDistance, float facesMaxLength);
 
     int closeKinect();
 
@@ -71,6 +78,8 @@ protected:
     libfreenect2::Frame* undistorted = nullptr;
     libfreenect2::Frame* registered = nullptr;
     libfreenect2::Frame* bigFrame = nullptr;
+
+
 
     friend class ofxKinectV2;
 };

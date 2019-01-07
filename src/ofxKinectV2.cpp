@@ -15,6 +15,8 @@ ofxKinectV2::ofxKinectV2()
     params.add(minDistance.set("minDistance", 500, 0, 12000));
     params.add(maxDistance.set("maxDistance", 6000, 0, 12000));
 	params.add(exposureCompensation.set("exposureCompensation", 0, 0, 640));
+	params.add(facesMaxLength.set("faces length", 0.3, 0.01, 0.1));
+	params.add(steps.set("Steps", 1, 1, 10));
 	exposureCompensation.addListener(this, &ofxKinectV2::setColorAutoExposureCallback);
 	params.add(pseudoExposureTime.set("pseudoExposureTime", 0, 0, 66));
 	pseudoExposureTime.addListener(this, &ofxKinectV2::setColorSemiAutoExposureCallback);
@@ -127,15 +129,24 @@ void ofxKinectV2::threadedFunction()
                                registeredPixelsBack,
                                rawDepthPixelsBack,
                                rawIRPixelsBack,
-                               distancePixelsBack);
-        
+                               distancePixelsBack, pcVertsBack, pcColorsBack,pcIndicesBack, pcTexCoordsBack,steps,minDistance,maxDistance,facesMaxLength);
         pixelsFront.swap(pixelsBack);
         registeredPixelsFront.swap(registeredPixelsBack);
         rawDepthPixelsFront.swap(rawDepthPixelsBack);
         rawIRPixelsFront.swap(rawIRPixelsBack);
         distancePixelsFront.swap(distancePixelsBack);
-        
-        lock();
+		pcVertsFront.swap(pcVertsBack);
+		pcColorsFront.swap(pcColorsBack);
+		pcIndicesFront.swap(pcIndicesBack);
+		pcTexCoordsFront.swap(pcTexCoordsBack);
+
+		pointCloud.getVertices().swap(pcVertsFront);
+		pointCloud.getColors().swap(pcColorsFront);
+		pointCloud.getTexCoords().swap(pcTexCoordsFront);
+		pointCloud.getIndices().swap(pcIndicesFront);
+
+	
+		lock();
         bNewBuffer = true;
         unlock();
     }
@@ -157,6 +168,10 @@ void ofxKinectV2::update()
             registeredPixels = registeredPixelsFront;
             rawDepthPixels = rawDepthPixelsFront;
             rawIRPixels = rawIRPixelsFront;
+			pcVerts = pcVertsFront;
+			pcColors = pcColorsFront;
+			pcIndices = pcIndicesFront;
+			pcTexCoords = pcTexCoordsFront;
             bNewBuffer = false;
         unlock();
 
@@ -200,9 +215,10 @@ void ofxKinectV2::update()
                 pixelsC[i] = ofMap(pixelsF[i], 0, 4500, 0, 255, true);
             }
         }
-
+		
         bNewFrame = true;
     }
+
 }
 
 
@@ -252,7 +268,14 @@ const ofPixels& ofxKinectV2::getIRPixels() const
 {
     return irPixels;
 }
-
+void ofxKinectV2::updatePointCloud() {
+	
+}
+const ofMesh& ofxKinectV2::getPointCloud() const
+{
+	
+	return pointCloud;
+}
 
 float ofxKinectV2::getDistanceAt(std::size_t x, std::size_t y) const
 {

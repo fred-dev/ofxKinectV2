@@ -13,7 +13,7 @@ void ofApp::setup()
     ofSetLogLevel(OF_LOG_VERBOSE);
 
     ofBackground(0);
-	//ofEnableArbTex();
+	ofEnableArbTex();
 	//ofEnableDepthTest();
     //see how many devices we have.
     ofxKinectV2 tmp;
@@ -35,11 +35,10 @@ void ofApp::setup()
     {
         kinects[d] = std::make_shared<ofxKinectV2>();
         kinects[d]->open(deviceList[d].serial);
-		pointClouds[d].setMode(ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+		//pointClouds[d].setMode(ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
         panel.add(kinects[d]->params);
     }
-	panel.add(facesMaxLength.set("faces length", 0.3, 0.01, 0.1));
-	panel.add(steps.set("Steps", 1, 1, 10));
+
 
     panel.loadFromFile("settings.xml");
 	
@@ -62,64 +61,7 @@ void ofApp::update()
 				texIR[d].loadData(kinects[d]->getIRPixels());
 				texDepth[d].loadData(kinects[d]->getDepthPixels());
 
-				if (showPointCloud)
-				{
-					
-					pointClouds[d].clear();
-
-					const int width = texRGBRegistered[d].getWidth();
-					const int height = texRGBRegistered[d].getHeight();
-					const auto frameSize = width * height;
-
-					pointClouds[d].clear();
-					for (std::size_t y = 0; y < texRGBRegistered[d].getHeight(); y++)
-
-					for (std::size_t x = 0; x < texRGBRegistered[d].getWidth(); x++)
-					{
-						{
-							pointClouds[d].addVertex(kinects[d]->getWorldCoordinateAt(x, y));
-							//pointCloud.addTexCoord(ofVec2f(x, y));
-							pointClouds[d].addColor(kinects[d]->getRegisteredPixels().getColor(x, y));
-						}
-					}
-					pointClouds[d].getVertices().resize(frameSize);
-					pointClouds[d].getTexCoords().resize(frameSize);
-
-					//cout << "frame ssize " + ofToString(frameSize) << endl;
-					
-					auto vertices = pointClouds[d].getVerticesPointer();
-
 				
-					for (int i = 0; i < width - steps; i += steps) {
-						for (int j = 0; j < height - steps; j += steps) {
-							int topLeft = width * j + i;
-							int topRight = topLeft + steps;
-							int bottomLeft = topLeft + width * steps;
-							int bottomRight = bottomLeft + steps;
-
-							const ofVec3f & vTL = vertices[topLeft];
-							const ofVec3f & vTR = vertices[topRight];
-							const ofVec3f & vBL = vertices[bottomLeft];
-							const ofVec3f & vBR = vertices[bottomRight];
-							//upper left triangle
-							if (vTL.z > float(kinects[d]->minDistance)/1000 && vTL.z < float(kinects[d]->maxDistance) / 1000 && vTR.z > float(kinects[d]->minDistance)/1000 && vTR.z < float(kinects[d]->maxDistance) / 1000 &&  vBL.z > float(kinects[d]->minDistance)/1000 && vBL.z < float(kinects[d]->maxDistance) / 1000
-								&& abs(vTL.z - vTR.z) < facesMaxLength
-								&& abs(vTL.z - vBL.z) < facesMaxLength) {
-								const ofIndexType indices[3] = { topLeft, bottomLeft, topRight };
-								pointClouds[d].addIndices(indices, 3);
-							}
-
-							//bottom right triangle
-							if (vBR.z > float(kinects[d]->minDistance)/1000 && vBR.z < float(kinects[d]->maxDistance) / 1000 && vTR.z > float(kinects[d]->minDistance)/1000 && vTR.z < float(kinects[d]->maxDistance) / 1000 && vBL.z > float(kinects[d]->minDistance)/1000 && vBL.z < float(kinects[d]->maxDistance) / 1000
-								&& abs(vBR.z - vTR.z) < facesMaxLength
-								&& abs(vBR.z - vBL.z) < facesMaxLength) {
-								const ofIndexType indices[3] = { topRight, bottomRight, bottomLeft };
-								pointClouds[d].addIndices(indices, 3);
-
-							}					
-						}
-					}
-				}
 			}
 		}
 	}
@@ -151,13 +93,13 @@ void ofApp::draw()
 		}
 		else
 		{
+		
+			
 
-
-			//ofDisableArbTex();
 			cam.begin();
 			ofPushMatrix();
 			ofScale(1000, -1000, -1000);
-			pointClouds[currentKinect].draw();
+			kinects[currentKinect]->getPointCloud().draw();
 			ofPopMatrix();
 			cam.end();
 		}

@@ -71,6 +71,8 @@ public:
 
     /// \returns the distance image. Each pixels is the distance in millimeters.
     const ofFloatImage& getDistancePixels() const;
+
+	const ofMesh& getPointCloud() const;
     
     /// \brief Get the calulated distance for point x, y in the getRegisteredPixels image.
     float getDistanceAt(std::size_t x, std::size_t y) const;
@@ -81,13 +83,16 @@ public:
     ofParameterGroup params;
     ofParameter<float> minDistance;
     ofParameter<float> maxDistance;
-
+	ofParameter<float> facesMaxLength;
+	ofParameter<int> steps;
 	ofParameter<float> exposureCompensation;
 	ofParameter<float> pseudoExposureTime;
 	ofParameter<float> expIntegrationTime;
 	ofParameter<float> analogueGain;
 
 	 void setColorAutoExposureCallback(float & exposure_compensation);
+
+	 void updatePointCloud();
 
 	/** Sets a flicker-free exposure time of the RGB camera in pseudo-ms, value in range [0.0, 640] ms.
 
@@ -109,9 +114,14 @@ protected:
     ofFloatPixels rawDepthPixels;
     ofPixels depthPixels;
     ofFloatPixels distancePixels;
-
+	ofMesh pointCloud;
+	std::vector<glm::vec3> pcVerts;
+	std::vector<ofDefaultColorType> pcColors;
+	std::vector<ofIndexType> pcIndices;
+	std::vector<glm::vec2> pcTexCoords;
     ofFloatPixels rawIRPixels;
     ofPixels irPixels;
+
     
     bool bNewBuffer = false;
     bool bNewFrame = false;
@@ -129,6 +139,18 @@ protected:
     ofFloatPixels rawIRPixelsFront;
     ofFloatPixels distancePixelsFront;
     ofFloatPixels distancePixelsBack;
+
+	std::vector<glm::vec3> pcVertsFront;
+	std::vector<glm::vec3> pcVertsBack;
+
+	std::vector<ofDefaultColorType> pcColorsFront;
+	std::vector<ofDefaultColorType> pcColorsBack;
+
+	std::vector<ofIndexType> pcIndicesFront;
+	std::vector<ofIndexType> pcIndicesBack;
+
+	std::vector<glm::vec2> pcTexCoordsFront;
+	std::vector<glm::vec2> pcTexCoordsBack;
 
     int lastFrameNo = -1;
 };
