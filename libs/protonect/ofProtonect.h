@@ -36,7 +36,7 @@ public:
     ofProtonect();
     
     int open(const std::string& serial,
-             PacketPipelineType packetPipelineType = PacketPipelineType::CUDA);
+             PacketPipelineType packetPipelineType = PacketPipelineType::OPENCL);
     
 
     void updateKinect(ofPixels& rgbPixels,

@@ -275,7 +275,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					if (vTL.z > float(minDistance) / 1000 && vTL.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
 						&& abs(vTL.z - vTR.z) < facesMaxLength
 						&& abs(vTL.z - vBL.z) < facesMaxLength) {
-						const ofIndexType indices[3] = { topLeft, bottomLeft, topRight };
+						const ofIndexType indices[3] = { static_cast<ofIndexType>(topLeft), static_cast<ofIndexType>(bottomLeft), static_cast<ofIndexType>(topRight) };
 						pcIndicies.push_back(indices[0]);
 						pcIndicies.push_back(indices[1]);
 						pcIndicies.push_back(indices[2]);
@@ -287,7 +287,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					if (vBR.z > float(minDistance) / 1000 && vBR.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
 						&& abs(vBR.z - vTR.z) < facesMaxLength
 						&& abs(vBR.z - vBL.z) < facesMaxLength) {
-						const ofIndexType indices[3] = { topRight, bottomRight, bottomLeft };
+						const ofIndexType indices[3] = { static_cast<ofIndexType>(topRight), static_cast<ofIndexType>(bottomRight), static_cast<ofIndexType>(bottomLeft) };
 						pcIndicies.push_back(indices[0]);
 						pcIndicies.push_back(indices[1]);
 						pcIndicies.push_back(indices[2]);
@@ -305,6 +305,7 @@ int ofProtonect::closeKinect()
   if (bOpened)
   {
       listener->release(frames);
+      
 
       // TODO: restarting ir stream doesn't work!
       // TODO: bad things will happen, if frame listeners are freed before dev->stop() :(
@@ -312,12 +313,12 @@ int ofProtonect::closeKinect()
       dev->close();
 
       delete dev;
-      delete pipeline;
-      delete listener;
+      //delete pipeline;
+      //delete listener;
       delete undistorted;
       delete registered;
       delete registration;
-      //delete bigFrame;
+      delete bigFrame;
       bOpened = false;
   }
 
