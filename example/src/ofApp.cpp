@@ -14,7 +14,7 @@ void ofApp::setup()
 
     ofBackground(0);
 	ofEnableArbTex();
-	//ofEnableDepthTest();
+    
     //see how many devices we have.
     ofxKinectV2 tmp;
     std::vector <ofxKinectV2::KinectDeviceInfo> deviceList = tmp.getDeviceList();
@@ -34,8 +34,7 @@ void ofApp::setup()
     for(int d = 0; d < kinects.size(); d++)
     {
         kinects[d] = std::make_shared<ofxKinectV2>();
-        kinects[d]->open(deviceList[d].serial);
-		//pointClouds[d].setMode(ofPrimitiveMode::OF_PRIMITIVE_TRIANGLES);
+        kinects[d]->open(deviceList[d].serial, ofProtonect::PacketPipelineType::OPENCL, 2, false, false, true, false, false, true);
         panel.add(kinects[d]->params);
     }
 
@@ -56,10 +55,18 @@ void ofApp::update()
 
 			if (kinects[d]->isFrameNew())
 			{
-				texRGB[d].loadData(kinects[d]->getPixels());
-				texRGBRegistered[d].loadData(kinects[d]->getRegisteredPixels());
-				texIR[d].loadData(kinects[d]->getIRPixels());
-				texDepth[d].loadData(kinects[d]->getDepthPixels());
+                if (kinects[d]->getUseRgb()) {
+                    texRGB[d].loadData(kinects[d]->getPixels());
+                }
+                if (kinects[d]->getUseRegisterImages()) {
+                    texRGBRegistered[d].loadData(kinects[d]->getRegisteredPixels());
+                }
+                if (kinects[d]->getUseIr()) {
+                    texIR[d].loadData(kinects[d]->getIRPixels());
+                }
+                if (kinects[d]->getUseDepth()) {
+                    texDepth[d].loadData(kinects[d]->getDepthPixels());
+                }
 
 				
 			}
@@ -75,21 +82,30 @@ void ofApp::draw()
 	{
 		if (!showPointCloud)
 		{
-			drawTextureAtRowAndColumn("RGB Pixels width: " + ofToString(texRGB[currentKinect].getWidth()) + " height: " + ofToString(texRGB[currentKinect].getHeight()),
-				texRGB[currentKinect],
-				0, 0);
-
-			drawTextureAtRowAndColumn("RGB Pixels, Registered width: " + ofToString(texRGBRegistered[currentKinect].getWidth()) + " height: " + ofToString(texRGBRegistered[currentKinect].getHeight()),
-				texRGBRegistered[currentKinect],
-				1, 0);
-
-			drawTextureAtRowAndColumn("Depth Pixels, Mapped width: " + ofToString(texDepth[currentKinect].getWidth()) + " height: " + ofToString(texDepth[currentKinect].getHeight()),
-				texDepth[currentKinect],
-				1, 1);
-
-			drawTextureAtRowAndColumn("IR Pixels, Mapped width: " + ofToString(texIR[currentKinect].getWidth()) + " height: " + ofToString(texIR[currentKinect].getHeight()),
-				texIR[currentKinect],
-				0, 1);
+            if (kinects[currentKinect]->getUseRgb()) {
+                drawTextureAtRowAndColumn("RGB Pixels width: " + ofToString(texRGB[currentKinect].getWidth()) + " height: " + ofToString(texRGB[currentKinect].getHeight()),
+                                          texRGB[currentKinect],
+                                          0, 0);
+            }
+			
+            if (kinects[currentKinect]->getUseRegisterImages()) {
+                drawTextureAtRowAndColumn("RGB Pixels, Registered width: " + ofToString(texRGBRegistered[currentKinect].getWidth()) + " height: " + ofToString(texRGBRegistered[currentKinect].getHeight()),
+                                          texRGBRegistered[currentKinect],
+                                          1, 0);
+            }
+			
+            if (kinects[currentKinect]->getUseDepth()) {
+                drawTextureAtRowAndColumn("Depth Pixels, Mapped width: " + ofToString(texDepth[currentKinect].getWidth()) + " height: " + ofToString(texDepth[currentKinect].getHeight()),
+                                          texDepth[currentKinect],
+                                          1, 1);
+            }
+			
+            if (kinects[currentKinect]->getUseIr()) {
+                drawTextureAtRowAndColumn("IR Pixels, Mapped width: " + ofToString(texIR[currentKinect].getWidth()) + " height: " + ofToString(texIR[currentKinect].getHeight()),
+                                          texIR[currentKinect],
+                                          0, 1);
+            }
+			
 		}
 		else
 		{
@@ -99,7 +115,10 @@ void ofApp::draw()
 			cam.begin();
 			ofPushMatrix();
 			ofScale(1000, -1000, -1000);
-			kinects[currentKinect]->getPointCloud().draw();
+            if (kinects[currentKinect]->getUsePointCloud()) {
+                kinects[currentKinect]->getPointCloud().draw();
+
+            }
 			ofPopMatrix();
 			cam.end();
 		}

@@ -39,7 +39,7 @@
 #include <libfreenect2/registration.h>
 #include <libfreenect2/packet_pipeline.h>
 #include <libfreenect2/logger.h>
-
+#include <libfreenect2/color_settings.h>
 
 ofProtonect::ofProtonect()
 {
@@ -53,7 +53,7 @@ ofProtonect::ofProtonect()
     }
 }
 
-int ofProtonect::open(const std::string& serial, PacketPipelineType packetPipelineType)
+int ofProtonect::open(const std::string& serial, PacketPipelineType packetPipelineType, int device)
 {
     switch (packetPipelineType)
     {
@@ -64,18 +64,18 @@ int ofProtonect::open(const std::string& serial, PacketPipelineType packetPipeli
             pipeline = new libfreenect2::OpenGLPacketPipeline();
             break;
 		case PacketPipelineType::OPENCL:
-			pipeline = new libfreenect2::OpenCLPacketPipeline();
+			pipeline = new libfreenect2::OpenCLPacketPipeline(device);
 			break;
 		case PacketPipelineType::OPENCLKDE:
-			pipeline = new libfreenect2::OpenCLKdePacketPipeline();
+			pipeline = new libfreenect2::OpenCLKdePacketPipeline(device);
 			break;
 #if defined(LIBFREENECT2_WITH_CUDA_SUPPORT)
 		
         case PacketPipelineType::CUDA:
-			pipeline = new libfreenect2::CudaPacketPipeline(deviceId);
+			pipeline = new libfreenect2::CudaPacketPipeline(device);
             break;
         case PacketPipelineType::CUDAKDE:
-            pipeline = new libfreenect2::CudaKdePacketPipeline(deviceId);
+            pipeline = new libfreenect2::CudaKdePacketPipeline(device);
             break;
 #endif
         case PacketPipelineType::DEFAULT:
@@ -206,31 +206,40 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 		libfreenect2::Frame* ir = frames[libfreenect2::Frame::Ir];
 		libfreenect2::Frame* depth = frames[libfreenect2::Frame::Depth];
 
-		if (enableRGB && enableDepth)
+		if (registerImages)
 		{
 			registration->apply(rgb,
 				depth,
 				undistorted,
 				registered);
 		}
+        if (enableRGB) {
+            
+            if (rgb->format == libfreenect2::Frame::BGRX)
+            {
+                rgbFormat = OF_PIXELS_BGRA;
+            }
+            else
+            {
+                rgbFormat = OF_PIXELS_RGBA;
+            }
+            
+            rgbPixels.setFromPixels(rgb->data, rgb->width, rgb->height, rgbFormat);
+        }
+        if (registerImages)
+        {
+            rgbRegisteredPixels.setFromPixels(registered->data, registered->width, registered->height, rgbFormat);
+        }
+        if (enableDepth) {
+            depthPixels.setFromPixels(reinterpret_cast<float*>(depth->data), ir->width, ir->height, 1);
 
-		ofPixelFormat rgbFormat;
-		if (rgb->format == libfreenect2::Frame::BGRX)
-		{
-			rgbFormat = OF_PIXELS_BGRA;
-		}
-		else
-		{
-			rgbFormat = OF_PIXELS_RGBA;
-		}
+        }
+        
+        if (enableIr) {
+            irPixels.setFromPixels(reinterpret_cast<float*>(ir->data), ir->width, ir->height, 1);
+        }
 
-		rgbPixels.setFromPixels(rgb->data, rgb->width, rgb->height, rgbFormat);
-		rgbRegisteredPixels.setFromPixels(registered->data, registered->width, registered->height, rgbFormat);
-
-		depthPixels.setFromPixels(reinterpret_cast<float*>(depth->data), ir->width, ir->height, 1);
-		irPixels.setFromPixels(reinterpret_cast<float*>(ir->data), ir->width, ir->height, 1);
-
-		if (registration && undistorted)
+		if (usePointCloud)
 		{
 			const int width = rgbRegisteredPixels.getWidth();
 			const int height = rgbRegisteredPixels.getHeight();
@@ -242,7 +251,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 			pcTexCoords.clear();
 		
 
-
+            
 			for (std::size_t y = 0; y < rgbRegisteredPixels.getHeight(); y++){
 				for (std::size_t x = 0; x < rgbRegisteredPixels.getWidth(); x++)
 				{
@@ -259,46 +268,123 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					pcTexCoords.push_back(ofVec2f(x, y));
 				}
 			}
-
-			for (int i = 0; i < width - steps; i += steps) {
-				for (int j = 0; j < height - steps; j += steps) {
-					int topLeft = width * j + i;
-					int topRight = topLeft + steps;
-					int bottomLeft = topLeft + width * steps;
-					int bottomRight = bottomLeft + steps;
-					const ofVec3f vTL = pcVerts[topLeft];
-					const ofVec3f  vTR = pcVerts[topRight];
-					const ofVec3f  vBL = pcVerts[bottomLeft];
-					const ofVec3f  vBR = pcVerts[bottomRight];
-					//cout << ofToString(vTL) << endl;
-					//upper left triangle
-					if (vTL.z > float(minDistance) / 1000 && vTL.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
-						&& abs(vTL.z - vTR.z) < facesMaxLength
-						&& abs(vTL.z - vBL.z) < facesMaxLength) {
-						const ofIndexType indices[3] = { static_cast<ofIndexType>(topLeft), static_cast<ofIndexType>(bottomLeft), static_cast<ofIndexType>(topRight) };
-						pcIndicies.push_back(indices[0]);
-						pcIndicies.push_back(indices[1]);
-						pcIndicies.push_back(indices[2]);
-
-
-					}
-
-					//bottom right triangle
-					if (vBR.z > float(minDistance) / 1000 && vBR.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
-						&& abs(vBR.z - vTR.z) < facesMaxLength
-						&& abs(vBR.z - vBL.z) < facesMaxLength) {
-						const ofIndexType indices[3] = { static_cast<ofIndexType>(topRight), static_cast<ofIndexType>(bottomRight), static_cast<ofIndexType>(bottomLeft) };
-						pcIndicies.push_back(indices[0]);
-						pcIndicies.push_back(indices[1]);
-						pcIndicies.push_back(indices[2]);
-
-					}
-				}
-			}	
+            if (pointCloudFilled) {
+                for (int i = 0; i < width - steps; i += steps) {
+                    for (int j = 0; j < height - steps; j += steps) {
+                        int topLeft = width * j + i;
+                        int topRight = topLeft + steps;
+                        int bottomLeft = topLeft + width * steps;
+                        int bottomRight = bottomLeft + steps;
+                        const ofVec3f vTL = pcVerts[topLeft];
+                        const ofVec3f  vTR = pcVerts[topRight];
+                        const ofVec3f  vBL = pcVerts[bottomLeft];
+                        const ofVec3f  vBR = pcVerts[bottomRight];
+                        //cout << ofToString(vTL) << endl;
+                        //upper left triangle
+                        if (vTL.z > float(minDistance) / 1000 && vTL.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
+                            && abs(vTL.z - vTR.z) < facesMaxLength
+                            && abs(vTL.z - vBL.z) < facesMaxLength) {
+                            const ofIndexType indices[3] = { static_cast<ofIndexType>(topLeft), static_cast<ofIndexType>(bottomLeft), static_cast<ofIndexType>(topRight) };
+                            pcIndicies.push_back(indices[0]);
+                            pcIndicies.push_back(indices[1]);
+                            pcIndicies.push_back(indices[2]);
+                        }
+                        
+                        //bottom right triangle
+                        if (vBR.z > float(minDistance) / 1000 && vBR.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
+                            && abs(vBR.z - vTR.z) < facesMaxLength
+                            && abs(vBR.z - vBL.z) < facesMaxLength) {
+                            const ofIndexType indices[3] = { static_cast<ofIndexType>(topRight), static_cast<ofIndexType>(bottomRight), static_cast<ofIndexType>(bottomLeft) };
+                            pcIndicies.push_back(indices[0]);
+                            pcIndicies.push_back(indices[1]);
+                            pcIndicies.push_back(indices[2]);
+                            
+                        }
+                    }
+                }
+            }
+				
 		}
 		listener->release(frames);
 	}
 }
+
+void ofProtonect::setUsePointCloud(bool _usePointCloud){
+    usePointCloud = _usePointCloud;
+}
+void ofProtonect::setRegisterImages(bool _registerImages){
+    registerImages = _registerImages;
+}
+void ofProtonect::setIsPointCloudFilled(bool _pointCloudFilled){
+    pointCloudFilled = _pointCloudFilled;
+}
+void ofProtonect::setUseRgb(bool _enableRGB){
+    enableRGB = _enableRGB;
+}
+void ofProtonect::setUseDepth(bool _enableDepth){
+    enableDepth = _enableDepth;
+}
+
+bool ofProtonect::getUsePointCloud(){
+    if(usePointCloud){
+        return true;
+        
+    }
+    
+    else{
+        return false;
+    }
+}
+bool ofProtonect::getRegisterImages(){
+    if(registerImages){
+        return true;
+    }
+    
+    else{
+        return false;
+    }
+}
+bool ofProtonect::getIsPointCloudFilled(){
+    if(pointCloudFilled){
+        return true;
+    }
+    
+    else{
+        return false;
+    }
+    
+}
+bool ofProtonect::getUseRgb(){
+    if(enableRGB){
+        return true;
+    }
+    
+    else{
+        return false;
+    }
+}
+bool ofProtonect::getUseDepth(){
+    if(enableDepth){
+        return true;
+    }
+    
+    else{
+        return false;
+    }
+}
+bool ofProtonect::getUseIr(){
+    if(enableIr){
+        return true;
+    }
+    
+    else{
+        return false;
+    }
+}
+void ofProtonect::setColorCamSettings(){
+    
+}
+
 
 int ofProtonect::closeKinect()
 {

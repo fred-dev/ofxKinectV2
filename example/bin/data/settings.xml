@@ -3,11 +3,14 @@
 	<kinectV2_112641634947>
 		<minDistance>500</minDistance>
 		<maxDistance>6000</maxDistance>
-		<exposureCompensation>0</exposureCompensation>
-		<pseudoExposureTime>0</pseudoExposureTime>
-		<expIntegrationTime>0</expIntegrationTime>
-		<analogueGain>1</analogueGain>
+		<auto_exposure>1</auto_exposure>
+		<Shutter_speed>50</Shutter_speed>
+		<analogueGain>3</analogueGain>
+		<auto_white_balance>1</auto_white_balance>
+		<redGain>2</redGain>
+		<blueGain>2</blueGain>
+		<greenGain>2</greenGain>
+		<Point_cloud_faces_length>0.3</Point_cloud_faces_length>
+		<Point_clooud_tex_steps>1</Point_clooud_tex_steps>
 	</kinectV2_112641634947>
-	<faces_length>0.01</faces_length>
-	<Steps>1</Steps>
 </group>

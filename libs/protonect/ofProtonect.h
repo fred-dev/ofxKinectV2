@@ -36,7 +36,7 @@ public:
     ofProtonect();
     
     int open(const std::string& serial,
-             PacketPipelineType packetPipelineType = PacketPipelineType::OPENCL);
+             PacketPipelineType packetPipelineType = PacketPipelineType::OPENCL, int device = 0);
     
 
     void updateKinect(ofPixels& rgbPixels,
@@ -58,10 +58,32 @@ public:
     {
         return freenect2;
     }
-  
+    void setUsePointCloud(bool _usePointCloud);
+    void setRegisterImages(bool _registerImages);
+    void setIsPointCloudFilled(bool _pointCloudFilled);
+    void setUseRgb(bool _enableRGB);
+    void setUseDepth(bool _enableDepth);
+    void setUseIr(bool _enableIr);
+    
+    bool getUsePointCloud();
+    bool getRegisterImages();
+    bool getIsPointCloudFilled();
+    bool getUseRgb();
+    bool getUseDepth();
+    bool getUseIr();
+    
+    void setColorCamSettings();
+
 protected:
+    ofPixelFormat rgbFormat;
+    
     bool enableRGB = true;
+    bool enableIr = true;
     bool enableDepth = true;
+    bool usePointCloud =true;
+    bool registerImages = true;
+    bool pointCloudFilled = true;
+
     int deviceId = -1;
 
     bool bOpened = false;

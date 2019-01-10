@@ -7,9 +7,9 @@ meta:
 
 osx:
 	ADDON_FRAMEWORKS = OpenCL VideoToolbox
-	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/vs/include/
+	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/vs/%
 vs:
-	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/osx/include/
+	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/osx/%
 
 
 linux64:

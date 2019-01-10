@@ -33,12 +33,14 @@ public:
     /// \brief Open the device with the given serial number.
     /// \param serial The serial number to open.
     /// \returns true if connected successfully.
-    bool open(const std::string& serial);
+    bool open(const std::string& serial, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true);
+    
+    
 
     /// \brief Open the device with the given serial number.
     /// \param deviceId The device id to open.
     /// \returns true if connected successfully.
-    bool open(int deviceId = 0);
+    bool open(int deviceId = 0, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true);
 
     /// \brief Update the Kinect internals.
     void update();
@@ -85,28 +87,56 @@ public:
     ofParameter<float> maxDistance;
 	ofParameter<float> facesMaxLength;
 	ofParameter<int> steps;
-	ofParameter<float> exposureCompensation;
-	ofParameter<float> pseudoExposureTime;
+    
+    ofParameter<bool> autoExposure;
+    
 	ofParameter<float> expIntegrationTime;
 	ofParameter<float> analogueGain;
 
-	 void setColorAutoExposureCallback(float & exposure_compensation);
+    ofParameter<bool> autoWhiteBalance;
+    ofParameter<float> redGain;
+    ofParameter<float> blueGain;
+    ofParameter<float> greenGain;
+    
 
-	 void updatePointCloud();
+    void setAutoExposureCallback(bool & auto_exposure);
+        
+    void setIntegrationTimeCallback(float & integration_time_ms);
+    void setAnalogueGainCallback(float & analog_gain);
+    
+    void setAutoWhiteBalanceCallback(bool & auto_white_balance);
+    void setRedGainCallback(float & red_gain);
+    void setGreenGainCallback(float & green_gain);
+    void setBlueGainCallback(float & blue_gain);
 
-	/** Sets a flicker-free exposure time of the RGB camera in pseudo-ms, value in range [0.0, 640] ms.
 
-	* @param pseudo_exposure_time_ms Pseudo-exposure time in milliseconds, range (0.0, 66.0+]
-	*/
-	 void setColorSemiAutoExposureCallback(float & pseudo_exposure_time_ms);
 
-	/** Manually set true exposure time and analog gain of the RGB camera.
-	* @param integration_time_ms True shutter time in milliseconds, range (0.0, 66.0]
-	* @param analog_gain Analog gain, range [1.0, 4.0]
-	*/
-	 void setColorManualExposureCallback(float & integration_time_ms, float & analog_gain);
+     void updatePointCloud();
+    
+    void setUsePointCloud(bool _usePointCloud);
+    void setUseRegisterImages(bool _registerImages);
+    void setIsPointCloudFilled(bool _pointCloudFilled);
+    void setUseRgb(bool _enableRGB);
+    void setUseDepth(bool _enableDepth);
+    void setUseIr(bool _enableIr);
+    
+
+    
+    bool getUsePointCloud();
+    bool getUseRegisterImages();
+    bool getIsPointCloudFilled();
+    bool getUseRgb();
+    bool getUseDepth();
+    bool getUseIr();
 
 protected:
+    bool bUsePointCloud;
+    bool bRegisterImages;
+    bool bPointCloudFilled;
+    bool bEnableRGB;
+    bool bEnableDepth;
+    bool bEnableIr;
+    
     void threadedFunction();
 
     ofPixels pixels;
