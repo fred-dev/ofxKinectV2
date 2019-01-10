@@ -28,13 +28,14 @@ void ofApp::setup()
 	pointClouds.resize(kinects.size());
 
     panel.setup("", "settings.xml", 10, 100);
+    panel.setup("", "settings.xml", 10, 100);
     
     // Note you don't have to use ofxKinectV2 as a shared pointer, but if you
     // want to have it in a vector ( ie: for multuple ) it needs to be.
     for(int d = 0; d < kinects.size(); d++)
     {
         kinects[d] = std::make_shared<ofxKinectV2>();
-        kinects[d]->open(deviceList[d].serial, ofProtonect::PacketPipelineType::OPENCL, 2, false, false, true, false, false, true);
+        kinects[d]->open(deviceList[d].serial, ofProtonect::PacketPipelineType::OPENCL, 0, true, true, true, true, true, true);
         panel.add(kinects[d]->params);
     }
 

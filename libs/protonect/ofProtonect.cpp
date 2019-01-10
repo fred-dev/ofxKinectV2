@@ -325,6 +325,11 @@ void ofProtonect::setUseDepth(bool _enableDepth){
     enableDepth = _enableDepth;
 }
 
+void ofProtonect::setUseIr(bool _enableIr)
+{
+	enableIr = _enableIr;
+}
+
 bool ofProtonect::getUsePointCloud(){
     if(usePointCloud){
         return true;
