@@ -163,7 +163,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
             registration->apply(rgb,
                                 depth,
                                 undistorted,
-                                registered);
+                                registered,false);
         }
 
         ofPixelFormat rgbFormat;
@@ -264,7 +264,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					uint8_t r = p[2];
 					
 					pcVerts.push_back(position);
-					pcColors.push_back(ofColor(r, g, b));
+					pcColors.push_back(ofColor(r, g, b, pointCloudAlpha));
 					pcTexCoords.push_back(ofVec2f(x, y));
 				}
 			}
@@ -330,6 +330,11 @@ void ofProtonect::setUseIr(bool _enableIr)
 	enableIr = _enableIr;
 }
 
+void ofProtonect::setPointCloudAlpha(int alpha)
+{
+	pointCloudAlpha = alpha;
+}
+
 bool ofProtonect::getUsePointCloud(){
     if(usePointCloud){
         return true;
@@ -385,6 +390,10 @@ bool ofProtonect::getUseIr(){
     else{
         return false;
     }
+}
+int ofProtonect::getPointCloudAlpha()
+{
+	return pointCloudAlpha;
 }
 void ofProtonect::setColorCamSettings(){
     

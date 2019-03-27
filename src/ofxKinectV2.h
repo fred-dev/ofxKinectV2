@@ -112,6 +112,7 @@ public:
 
 
      void updatePointCloud();
+	 void setPointCloudAlpha(int alpha);
     
     void setUsePointCloud(bool _usePointCloud);
     void setUseRegisterImages(bool _registerImages);

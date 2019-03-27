@@ -349,6 +349,11 @@ void ofxKinectV2::updatePointCloud() {
 	
 }
 
+void ofxKinectV2::setPointCloudAlpha(int alpha)
+{
+	protonect.setPointCloudAlpha(alpha);
+}
+
 const ofMesh& ofxKinectV2::getPointCloud() const
 {
 	return pointCloud;
