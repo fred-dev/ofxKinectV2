@@ -15,18 +15,14 @@ ofxKinectV2::ofxKinectV2()
     params.add(minDistance.set("minDistance", 500, 0, 12000));
     params.add(maxDistance.set("maxDistance", 6000, 0, 12000));
 
-    
-    params.add(autoExposure.set("auto exposure", true));
-    autoExposure.addListener(this, &ofxKinectV2::setAutoExposureCallback);
-
 	params.add(expIntegrationTime.set("Shutter speed", 50.0, 0.0, 66.0));
 	expIntegrationTime.addListener(this, &ofxKinectV2::setIntegrationTimeCallback);
 
 	params.add(analogueGain.set("analogueGain", 3.0, 1.0, 4.0));
 	analogueGain.addListener(this, &ofxKinectV2::setAnalogueGainCallback);
-    
-    params.add(autoWhiteBalance.set("auto white balance", true));
-    autoWhiteBalance.addListener(this, &ofxKinectV2::setAutoWhiteBalanceCallback);
+
+	params.add(autoExposure.set("auto exposure", true));
+	autoExposure.addListener(this, &ofxKinectV2::setAutoExposureCallback);
     
     params.add(redGain.set("redGain", 2.0, 0.01, 4.0));
     redGain.addListener(this, &ofxKinectV2::setRedGainCallback);
@@ -36,6 +32,9 @@ ofxKinectV2::ofxKinectV2()
 
     params.add(greenGain.set("greenGain", 2.0, 0.01, 4.0));
     greenGain.addListener(this, &ofxKinectV2::setGreenGainCallback);
+
+	params.add(autoWhiteBalance.set("auto white balance", true));
+	autoWhiteBalance.addListener(this, &ofxKinectV2::setAutoWhiteBalanceCallback);
     
     params.add(facesMaxLength.set("Point cloud faces length", 0.3, 0.01, 0.5));
     params.add(steps.set("Point clooud tex steps", 1, 1, 10));
