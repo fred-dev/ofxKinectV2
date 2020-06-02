@@ -64,6 +64,7 @@ public:
     void setUseRgb(bool _enableRGB);
     void setUseDepth(bool _enableDepth);
     void setUseIr(bool _enableIr);
+    void setPointCloudTexCoord(bool _useTexCoords);
 	void setPointCloudAlpha(int alpha);
     
     bool getUsePointCloud();
@@ -72,6 +73,7 @@ public:
     bool getUseRgb();
     bool getUseDepth();
     bool getUseIr();
+    bool getPointCloudTexCoord();
 	int getPointCloudAlpha();
     
     void setColorCamSettings();
@@ -85,6 +87,7 @@ protected:
     bool usePointCloud =true;
     bool registerImages = true;
     bool pointCloudFilled = true;
+    bool pointCloudTexCoords = true;
 	int pointCloudAlpha = 255;
 
     int deviceId = -1;

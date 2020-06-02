@@ -33,14 +33,14 @@ public:
     /// \brief Open the device with the given serial number.
     /// \param serial The serial number to open.
     /// \returns true if connected successfully.
-    bool open(const std::string& serial, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true);
+    bool open(const std::string& serial, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true,  bool pointCloudTexCoords = true);
     
     
 
     /// \brief Open the device with the given serial number.
     /// \param deviceId The device id to open.
     /// \returns true if connected successfully.
-    bool open(int deviceId = 0, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true);
+    bool open(int deviceId = 0, ofProtonect::PacketPipelineType packetPipelineType = ofProtonect::PacketPipelineType::OPENCL, int processingDevice = 0, bool initRGB =true, bool initIr =true, bool initDepth = true, bool registerImages =true, bool usePointCloud = true, bool pointCloudHasFaces = true,  bool pointCloudTexCoords = true);
 
     /// \brief Update the Kinect internals.
     void update();
@@ -120,6 +120,7 @@ public:
     void setUseRgb(bool _enableRGB);
     void setUseDepth(bool _enableDepth);
     void setUseIr(bool _enableIr);
+    void setUseTexCoords(bool _useTexCoords);
     
 
     
@@ -129,6 +130,7 @@ public:
     bool getUseRgb();
     bool getUseDepth();
     bool getUseIr();
+    bool getUseTexCoords();
 
 protected:
     bool bUsePointCloud;
@@ -137,6 +139,7 @@ protected:
     bool bEnableRGB;
     bool bEnableDepth;
     bool bEnableIr;
+    bool bPointCloudTexCoords;
     
     void threadedFunction();
 

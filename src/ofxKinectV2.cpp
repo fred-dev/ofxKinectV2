@@ -36,7 +36,7 @@ ofxKinectV2::ofxKinectV2()
 	params.add(autoWhiteBalance.set("auto white balance", true));
 	autoWhiteBalance.addListener(this, &ofxKinectV2::setAutoWhiteBalanceCallback);
     
-    params.add(facesMaxLength.set("Point cloud faces length", 0.3, 0.01, 0.5));
+    params.add(facesMaxLength.set("Point cloud faces length", 100.0, 1.0, 500.0));
     params.add(steps.set("Point clooud tex steps", 1, 1, 10));
     
 }
@@ -83,7 +83,7 @@ std::size_t ofxKinectV2::getNumDevices() const
 }
 
 
-bool ofxKinectV2::open(int deviceId, ofProtonect::PacketPipelineType packetPipelineType, int processingDevice, bool initRGB, bool initIr, bool initDepth, bool registerImages, bool usePointCloud, bool pointCloudHasFaces)
+bool ofxKinectV2::open(int deviceId, ofProtonect::PacketPipelineType packetPipelineType, int processingDevice, bool initRGB, bool initIr, bool initDepth, bool registerImages, bool usePointCloud, bool pointCloudHasFaces, bool pointCloudTexCoords)
 {
     std::vector<KinectDeviceInfo> devices = getDeviceList();
     
@@ -101,10 +101,10 @@ bool ofxKinectV2::open(int deviceId, ofProtonect::PacketPipelineType packetPipel
 
     string serial = devices[deviceId].serial;
     
-    return open(serial , packetPipelineType, processingDevice, initRGB, initDepth, registerImages, usePointCloud, pointCloudHasFaces);
+    return open(serial , packetPipelineType, processingDevice, initRGB, initDepth, registerImages, usePointCloud, pointCloudHasFaces, pointCloudHasFaces);
 }
 
-bool ofxKinectV2::open(const std::string& serial, ofProtonect::PacketPipelineType packetPipelineType,  int processingDevice, bool initRGB, bool initIr, bool initDepth, bool registerImages, bool usePointCloud, bool pointCloudHasFaces)
+bool ofxKinectV2::open(const std::string& serial, ofProtonect::PacketPipelineType packetPipelineType,  int processingDevice, bool initRGB, bool initIr, bool initDepth, bool registerImages, bool usePointCloud, bool pointCloudHasFaces, bool pointCloudTexCoords)
 {
     close(); 
 
@@ -122,7 +122,7 @@ bool ofxKinectV2::open(const std::string& serial, ofProtonect::PacketPipelineTyp
     }
     
     lastFrameNo = -1;
-    
+
     bOpened = true;
     
     autoExposure = true;
@@ -132,12 +132,14 @@ bool ofxKinectV2::open(const std::string& serial, ofProtonect::PacketPipelineTyp
     bPointCloudFilled = pointCloudHasFaces;
     bEnableRGB = initRGB;
     bEnableDepth = initDepth;
+    bPointCloudTexCoords = pointCloudTexCoords;
     
     setUseRgb(initRGB);
     setUseDepth(initDepth);
     setUseRegisterImages(registerImages);
     setUsePointCloud(usePointCloud);
     setIsPointCloudFilled(pointCloudHasFaces);
+    setUseTexCoords(pointCloudTexCoords);
     
     if(pointCloudHasFaces){
         pointCloud.setMode(OF_PRIMITIVE_TRIANGLES);
@@ -196,11 +198,18 @@ void ofxKinectV2::threadedFunction()
         
         if(getUsePointCloud()){
             pcVertsFront.swap(pcVertsBack);
-            pcColorsFront.swap(pcColorsBack);
-            pcTexCoordsFront.swap(pcTexCoordsBack);
+            if (getUseTexCoords()) {
+                pcTexCoordsFront.swap(pcTexCoordsBack);
+                pointCloud.getTexCoords().swap(pcTexCoordsFront);
+
+            }
+            else{
+                pcColorsFront.swap(pcColorsBack);
+                pointCloud.getColors().swap(pcColorsFront);
+            }
+            
             pointCloud.getVertices().swap(pcVertsFront);
-            pointCloud.getColors().swap(pcColorsFront);
-            pointCloud.getTexCoords().swap(pcTexCoordsFront);
+            
         }
 
         if (getIsPointCloudFilled()) {
@@ -244,8 +253,14 @@ void ofxKinectV2::update()
         
             if(getUsePointCloud()){
                 pcVerts = pcVertsFront;
-                pcColors = pcColorsFront;
-                pcTexCoords = pcTexCoordsFront;
+                if (getUseTexCoords()) {
+                    pcTexCoords = pcTexCoordsFront;
+                }
+                else{
+                    pcColors = pcColorsFront;
+                }
+                
+                
             }
 			
         
@@ -404,6 +419,11 @@ void ofxKinectV2::setUseDepth(bool _enableDepth){
 void ofxKinectV2::setUseIr(bool _enableIr){
     protonect.setUseIr(_enableIr);
 }
+
+void ofxKinectV2::setUseTexCoords(bool _useTexCoords){
+    protonect.setPointCloudTexCoord(_useTexCoords);
+}
+
 bool ofxKinectV2::getUsePointCloud(){
     return protonect.getUsePointCloud();
 }
@@ -426,6 +446,10 @@ bool ofxKinectV2::getUseDepth(){
 
 bool ofxKinectV2::getUseIr(){
     return protonect.getUseIr();
+}
+
+bool ofxKinectV2::getUseTexCoords(){
+    return protonect.getPointCloudTexCoord();
 }
 
 void ofxKinectV2::setAutoExposureCallback(bool & auto_exposure){

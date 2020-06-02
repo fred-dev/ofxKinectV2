@@ -1,6 +1,6 @@
 //  ofProtonect.cpp
 //
-//  Modified by Theodore Watson on 11/16/15
+//  Modified by Theodore Watson on 1165
 //  from the Protonect example in https://github.com/OpenKinect/libfreenect2
 
 
@@ -246,9 +246,15 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 			const auto frameSize = width * height;
 
 			pcVerts.clear();
-			pcColors.clear();
+            if (pointCloudTexCoords) {
+                pcTexCoords.clear();
+            }
+            else{
+                pcColors.clear();
+            }
+			
 			pcIndicies.clear();
-			pcTexCoords.clear();
+			
 		
 
             
@@ -263,9 +269,15 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					uint8_t g = p[1];
 					uint8_t r = p[2];
 					
-					pcVerts.push_back(position);
-					pcColors.push_back(ofColor(r, g, b, pointCloudAlpha));
-					pcTexCoords.push_back(ofVec2f(x, y));
+                    pcVerts.push_back(glm::vec3(position.x * 1000, position.y * -1000, position.z * -1000));
+                    if (pointCloudTexCoords) {
+                        pcTexCoords.push_back(ofVec2f(x, y));
+                    }
+                    else{
+                        pcColors.push_back(ofColor(r, g, b, pointCloudAlpha));
+
+                    }
+					
 				}
 			}
             if (pointCloudFilled) {
@@ -281,7 +293,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
                         const ofVec3f  vBR = pcVerts[bottomRight];
                         //cout << ofToString(vTL) << endl;
                         //upper left triangle
-                        if (vTL.z > float(minDistance) / 1000 && vTL.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
+                        if (-vTL.z > minDistance  && -vTL.z < maxDistance  && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
                             && abs(vTL.z - vTR.z) < facesMaxLength
                             && abs(vTL.z - vBL.z) < facesMaxLength) {
                             const ofIndexType indices[3] = { static_cast<ofIndexType>(topLeft), static_cast<ofIndexType>(bottomLeft), static_cast<ofIndexType>(topRight) };
@@ -291,7 +303,7 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
                         }
                         
                         //bottom right triangle
-                        if (vBR.z > float(minDistance) / 1000 && vBR.z < float(maxDistance) / 1000 && vTR.z > float(minDistance) / 1000 && vTR.z < float(maxDistance) / 1000 && vBL.z > float(minDistance) / 1000 && vBL.z < float(maxDistance) / 1000
+                        if (-vBR.z > minDistance && -vBR.z < maxDistance && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
                             && abs(vBR.z - vTR.z) < facesMaxLength
                             && abs(vBR.z - vBL.z) < facesMaxLength) {
                             const ofIndexType indices[3] = { static_cast<ofIndexType>(topRight), static_cast<ofIndexType>(bottomRight), static_cast<ofIndexType>(bottomLeft) };
@@ -328,6 +340,9 @@ void ofProtonect::setUseDepth(bool _enableDepth){
 void ofProtonect::setUseIr(bool _enableIr)
 {
 	enableIr = _enableIr;
+}
+void ofProtonect::setPointCloudTexCoord(bool _useTexCoords){
+    pointCloudTexCoords = _useTexCoords;
 }
 
 void ofProtonect::setPointCloudAlpha(int alpha)
@@ -390,6 +405,10 @@ bool ofProtonect::getUseIr(){
     else{
         return false;
     }
+}
+
+bool ofProtonect::getPointCloudTexCoord(){
+    return pointCloudTexCoords;
 }
 int ofProtonect::getPointCloudAlpha()
 {

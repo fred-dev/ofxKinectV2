@@ -13,4 +13,18 @@
 		<Point_cloud_faces_length>0.3</Point_cloud_faces_length>
 		<Point_clooud_tex_steps>1</Point_clooud_tex_steps>
 	</kinectV2_112641634947>
+	<fullscreen>1</fullscreen>
+	<kinectV2_000568261047>
+		<minDistance>500</minDistance>
+		<maxDistance>9489.8</maxDistance>
+		<Shutter_speed>50</Shutter_speed>
+		<analogueGain>3</analogueGain>
+		<auto_exposure>1</auto_exposure>
+		<redGain>2</redGain>
+		<blueGain>2</blueGain>
+		<greenGain>2</greenGain>
+		<auto_white_balance>1</auto_white_balance>
+		<Point_cloud_faces_length>0.3</Point_cloud_faces_length>
+		<Point_clooud_tex_steps>1</Point_clooud_tex_steps>
+	</kinectV2_000568261047>
 </group>
