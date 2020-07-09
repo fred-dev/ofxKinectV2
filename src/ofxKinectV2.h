@@ -74,8 +74,10 @@ public:
     /// \returns the distance image. Each pixels is the distance in millimeters.
     const ofFloatImage& getDistancePixels() const;
 
-	const ofMesh& getPointCloud() const;
+	const ofVboMesh& getPointCloud() const;
     
+	void setPointCloudTransformationMatrix(ofMatrix4x4 _mat);
+
     /// \brief Get the calulated distance for point x, y in the getRegisteredPixels image.
     float getDistanceAt(std::size_t x, std::size_t y) const;
     
@@ -121,8 +123,8 @@ public:
     void setUseDepth(bool _enableDepth);
     void setUseIr(bool _enableIr);
     void setUseTexCoords(bool _useTexCoords);
-    
-
+	void setTransformPointCloud(bool _transformPointCloud);
+	void passTransformationMat(ofMatrix4x4 mat);
     
     bool getUsePointCloud();
     bool getUseRegisterImages();
@@ -131,6 +133,7 @@ public:
     bool getUseDepth();
     bool getUseIr();
     bool getUseTexCoords();
+	bool getTransformPointCloud();
 
 protected:
     bool bUsePointCloud;
@@ -140,6 +143,7 @@ protected:
     bool bEnableDepth;
     bool bEnableIr;
     bool bPointCloudTexCoords;
+	bool bTransformPointCloud;
     
     void threadedFunction();
 
@@ -148,7 +152,7 @@ protected:
     ofFloatPixels rawDepthPixels;
     ofPixels depthPixels;
     ofFloatPixels distancePixels;
-	ofMesh pointCloud;
+	ofVboMesh pointCloud;
 	std::vector<glm::vec3> pcVerts;
 	std::vector<ofDefaultColorType> pcColors;
 	std::vector<ofIndexType> pcIndices;

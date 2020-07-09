@@ -140,6 +140,8 @@ bool ofxKinectV2::open(const std::string& serial, ofProtonect::PacketPipelineTyp
     setUsePointCloud(usePointCloud);
     setIsPointCloudFilled(pointCloudHasFaces);
     setUseTexCoords(pointCloudTexCoords);
+	setTransformPointCloud(true);
+	
     
     if(pointCloudHasFaces){
         pointCloud.setMode(OF_PRIMITIVE_TRIANGLES);
@@ -368,9 +370,14 @@ void ofxKinectV2::setPointCloudAlpha(int alpha)
 	protonect.setPointCloudAlpha(alpha);
 }
 
-const ofMesh& ofxKinectV2::getPointCloud() const
+const ofVboMesh& ofxKinectV2::getPointCloud() const
 {
 	return pointCloud;
+}
+
+void ofxKinectV2::setPointCloudTransformationMatrix(ofMatrix4x4 _mat)
+{
+	protonect.setTransformationMatrix(_mat);
 }
 
 float ofxKinectV2::getDistanceAt(std::size_t x, std::size_t y) const
@@ -424,6 +431,16 @@ void ofxKinectV2::setUseTexCoords(bool _useTexCoords){
     protonect.setPointCloudTexCoord(_useTexCoords);
 }
 
+void ofxKinectV2::setTransformPointCloud(bool _transformPointCloud)
+{
+	protonect.setTransformPointCloud(_transformPointCloud);
+}
+
+void ofxKinectV2::passTransformationMat(ofMatrix4x4 mat)
+{
+	protonect.setTransformationMatrix(mat);
+}
+
 bool ofxKinectV2::getUsePointCloud(){
     return protonect.getUsePointCloud();
 }
@@ -450,6 +467,11 @@ bool ofxKinectV2::getUseIr(){
 
 bool ofxKinectV2::getUseTexCoords(){
     return protonect.getPointCloudTexCoord();
+}
+
+bool ofxKinectV2::getTransformPointCloud()
+{
+	return protonect.getTransformPointCloud();
 }
 
 void ofxKinectV2::setAutoExposureCallback(bool & auto_exposure){

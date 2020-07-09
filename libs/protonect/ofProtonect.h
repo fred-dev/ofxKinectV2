@@ -66,6 +66,7 @@ public:
     void setUseIr(bool _enableIr);
     void setPointCloudTexCoord(bool _useTexCoords);
 	void setPointCloudAlpha(int alpha);
+	void setTransformPointCloud(bool _transformPointCloud);
     
     bool getUsePointCloud();
     bool getRegisterImages();
@@ -75,8 +76,12 @@ public:
     bool getUseIr();
     bool getPointCloudTexCoord();
 	int getPointCloudAlpha();
+	bool getTransformPointCloud();
     
     void setColorCamSettings();
+
+	void setTransformationMatrix(ofMatrix4x4 _mat);
+	
 
 protected:
     ofPixelFormat rgbFormat;
@@ -88,12 +93,13 @@ protected:
     bool registerImages = true;
     bool pointCloudFilled = true;
     bool pointCloudTexCoords = true;
+	bool transformPointCloud = true;
 	int pointCloudAlpha = 255;
 
     int deviceId = -1;
 
     bool bOpened = false;
-    
+	ofMatrix4x4 pointCloudTransformationMat;
     libfreenect2::Freenect2 freenect2;
 
     libfreenect2::Freenect2Device* dev = nullptr;

@@ -268,8 +268,13 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
 					uint8_t b = p[0];
 					uint8_t g = p[1];
 					uint8_t r = p[2];
-					
-                    pcVerts.push_back(glm::vec3(position.x * 1000, position.y * -1000, position.z * -1000));
+					if (transformPointCloud) {
+						pcVerts.push_back(ofVec3f(position.x * 1000, position.y * -1000, position.z * -1000) * pointCloudTransformationMat);
+					}
+					else{
+						pcVerts.push_back(glm::vec3(position.x * 1000, position.y * -1000, position.z * -1000));
+
+					}
                     if (pointCloudTexCoords) {
                         pcTexCoords.push_back(ofVec2f(x, y));
                     }
@@ -293,8 +298,11 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
                         const ofVec3f  vBR = pcVerts[bottomRight];
                         //cout << ofToString(vTL) << endl;
                         //upper left triangle
-                        if (-vTL.z > minDistance  && -vTL.z < maxDistance  && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
-                            && abs(vTL.z - vTR.z) < facesMaxLength
+
+						/*if (-vTL.z > minDistance  && -vTL.z < maxDistance  && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
+							&& abs(vTL.z - vTR.z) < facesMaxLength
+							&& abs(vTL.z - vBL.z) < facesMaxLength) {*/
+                        if (abs(vTL.z - vTR.z) < facesMaxLength
                             && abs(vTL.z - vBL.z) < facesMaxLength) {
                             const ofIndexType indices[3] = { static_cast<ofIndexType>(topLeft), static_cast<ofIndexType>(bottomLeft), static_cast<ofIndexType>(topRight) };
                             pcIndicies.push_back(indices[0]);
@@ -303,8 +311,10 @@ void ofProtonect::updateKinect(ofPixels& rgbPixels,
                         }
                         
                         //bottom right triangle
-                        if (-vBR.z > minDistance && -vBR.z < maxDistance && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
-                            && abs(vBR.z - vTR.z) < facesMaxLength
+						/*if (-vBR.z > minDistance && -vBR.z < maxDistance && -vTR.z > minDistance  && -vTR.z < maxDistance  && -vBL.z > minDistance  && -vBL.z < maxDistance
+							&& abs(vBR.z - vTR.z) < facesMaxLength
+							&& abs(vBR.z - vBL.z) < facesMaxLength) {*/
+                        if (abs(vBR.z - vTR.z) < facesMaxLength
                             && abs(vBR.z - vBL.z) < facesMaxLength) {
                             const ofIndexType indices[3] = { static_cast<ofIndexType>(topRight), static_cast<ofIndexType>(bottomRight), static_cast<ofIndexType>(bottomLeft) };
                             pcIndicies.push_back(indices[0]);
@@ -348,6 +358,11 @@ void ofProtonect::setPointCloudTexCoord(bool _useTexCoords){
 void ofProtonect::setPointCloudAlpha(int alpha)
 {
 	pointCloudAlpha = alpha;
+}
+
+void ofProtonect::setTransformPointCloud(bool _transformPointCloud)
+{
+	transformPointCloud = _transformPointCloud;
 }
 
 bool ofProtonect::getUsePointCloud(){
@@ -414,10 +429,18 @@ int ofProtonect::getPointCloudAlpha()
 {
 	return pointCloudAlpha;
 }
+bool ofProtonect::getTransformPointCloud()
+{
+	return transformPointCloud;
+}
 void ofProtonect::setColorCamSettings(){
     
 }
 
+void ofProtonect::setTransformationMatrix(ofMatrix4x4 _mat)
+{
+	pointCloudTransformationMat = _mat;
+}
 
 int ofProtonect::closeKinect()
 {
