@@ -1,6 +1,9 @@
 ofxKinectV2
 ===========
 
+> **About this fork:** Fork of [ofTheo/ofxKinectV2](https://github.com/ofTheo/ofxKinectV2) (2017-2019), used for *synk*. Adds Windows/macOS builds with a patched libusb and CUDA/OpenCL libfreenect2, OpenCL device selection, registration, point clouds with alpha fading, and colour camera and stream controls. Upstream has moved on since (43 commits).
+
+
 An addon for the new Kinect For Windows V2 sensor. 
 Based on the excellent work by the https://github.com/OpenKinect/libfreenect2 team ( @JoshBlake @floe and @christiankerl plus others ) 
 
