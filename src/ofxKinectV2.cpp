@@ -10,6 +10,8 @@
 #include "ofGLProgrammableRenderer.h"
 
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <thread>
 
 std::atomic<int> ofxKinectV2::openCameraCount{ 0 };

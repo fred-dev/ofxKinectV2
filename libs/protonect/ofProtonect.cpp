@@ -36,6 +36,7 @@
 #include "ofUtils.h"
 
 #include <algorithm>
+#include <cstdint>
 
 namespace
 {

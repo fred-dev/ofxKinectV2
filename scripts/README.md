@@ -1,5 +1,7 @@
 # Building libfreenect2 for ofxKinectV2
 
+> Bringing the addon up on macOS or Linux? Read [HANDOFF_MAC_LINUX.md](HANDOFF_MAC_LINUX.md) first.
+
 ofxKinectV2 links a libfreenect2 built from source with the scripts in this folder. Every
 platform uses the same CMake options, so the pipelines behave the same everywhere:
 
