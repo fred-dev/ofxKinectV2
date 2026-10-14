@@ -1,28 +1,122 @@
 ofxKinectV2
 ===========
 
-> **About this fork:** Fork of [ofTheo/ofxKinectV2](https://github.com/ofTheo/ofxKinectV2) (2017-2019), used for *synk*. Adds Windows/macOS builds with a patched libusb and CUDA/OpenCL libfreenect2, OpenCL device selection, registration, point clouds with alpha fading, and colour camera and stream controls. Upstream has moved on since (43 commits).
+> **About this fork:** Fork of [ofTheo/ofxKinectV2](https://github.com/ofTheo/ofxKinectV2), used for *synk*. Rebuilt around
+> current libfreenect2 with CUDA / OpenCL depth decoding, several Kinects at once, and point clouds / meshes that use the same
+> conventions as [ofxK4a](../ofxK4a) so Kinect v2 and Azure Kinect clouds can be combined in one scene.
 
+openFrameworks addon for the Kinect for Windows v2 / Xbox One Kinect, through
+[libfreenect2](https://github.com/OpenKinect/libfreenect2) (the Kinect SDK 2.0 is not needed, so any number of Kinects can be
+used on one machine, bandwidth permitting).
 
-An addon for the new Kinect For Windows V2 sensor. 
-Based on the excellent work by the https://github.com/OpenKinect/libfreenect2 team ( @JoshBlake @floe and @christiankerl plus others ) 
+## Features
 
-New: 
-- Supports multiple kinects. 
-- Optimized for openFrameworks release 0.9.0 
-- Uses OpenCL based decoding by default = much faster decoding 
-- Less crashes on startup and shutdown 
-- Supports both the early beta device and the new retail device. 
+- Several Kinects at once, each on its own capture thread. One libfreenect2 context is shared by every device.
+- Depth decoding on the GPU: CUDA or OpenCL (or CPU), picked automatically with fallback (`PacketPipelineType::DEFAULT`).
+- Colour (1920 x 1080), depth, IR, colour registered to depth, all un-mirrored (libfreenect2 hands out mirror images).
+- Point cloud or triangulated mesh with normals, built on the capture thread:
+  - metres, camera space with +X right, +Y down, +Z forward - the same as ofxK4a;
+  - textured from the full 1080p colour image (texture coordinates in pixels) or per-vertex colours;
+  - depth resolution (512 x 424, depth camera space) or colour resolution ("Colour-res point cloud", 1920 x 1080 samples,
+    colour camera space);
+  - triangles across depth edges are dropped (max edge length and depth-relative jump), and points the colour camera can't
+    see get no colour instead of the colour of whatever is in front of them;
+  - optional edge-preserving depth denoise, step (decimation), camera -> world transformation matrix.
+- Colour camera controls (exposure, gain, white balance) as `ofParameter`s, safe before and after `open()`.
+- Capture statistics per camera (`getCaptureStats()`: fps, ms of work per frame, ms of it spent on the point cloud).
 
+## Installation
 
-Notes:
-- Kinect needs to have flashed firmware ( this currently needs to be done on Windows 8 ) 
-- Requires a USB 3 port on machine. 
-- For OS X if you have issues connecting to the device, check in the System Profiler -> USB.  If the Nui Sensor is not listed under SuperSpeed, unplug the power to the device and replug it in, without disconnecting the USB cable. 
-- Only tested on OS X though Win / Nix should be possible too with patched libusb ( see: https://github.com/OpenKinect/libfreenect2/blob/master/depends/README.depends.txt ) 
-- If you have the ofxKinect ( v1 ) addon in your project remove the ofxKinect libusb lib and use the one that comes with this repo instead. 
-- //On OS X if you are not using the example project. Make sure to add OpenCL.framework to the Link Binary With Library Build Phase and also change the line in Project.xcconfig to OTHER_LDFLAGS = $(OF_CORE_LIBS) $(OF_CORE_FRAMEWORKS) -framework OpenCL
+### Windows
 
+1. Install the libusbK (or WinUSB) driver for the "Xbox NUI Sensor" with [Zadig](https://zadig.akeo.ie/).
+2. Use a USB 3 port; every Kinect v2 needs most of a USB 3 controller's bandwidth, so put each one on its own controller
+   (add-in USB 3 cards) when using several.
+3. Clone into `openFrameworks/addons` and generate projects with the projectGenerator.
 
+libfreenect2 is prebuilt in `libs/libfreenect2` (x64, Release and Debug, CUDA + OpenCL + OpenGL + CPU pipelines). The project
+generator links it and copies its DLLs next to the exe. The CUDA pipeline needs an NVIDIA driver; without one the OpenCL or CPU
+pipeline is used.
 
-Huge thanks to @christiankerl for a lot of the recent changes that made this work well on OS X. 
+### macOS / Linux
+
+Build libfreenect2 with the scripts in [`scripts/`](scripts/README.md) first - they use the same options as the Windows build
+and install headers and libraries into `libs/libfreenect2/{include,lib}/<platform>`.
+
+## Usage
+
+```cpp
+// ofApp.h
+std::vector<std::shared_ptr<ofxKinectV2>> kinects; // ofxKinectV2 is a thread: keep it by pointer
+ofTexture texColour;
+
+// setup()
+ofEnableArbTex(); // texture coordinates are pixels of the colour image
+ofxKinectV2::Settings settings;
+settings.pointCloudHasFaces = true;
+for (const auto& device : ofxKinectV2::listDevices()) // sorted by serial
+{
+    auto kinect = std::make_shared<ofxKinectV2>();
+    if (kinect->open(device.serial, settings)) kinects.push_back(kinect);
+}
+
+// update()
+kinects[0]->update();
+if (kinects[0]->isFrameNew()) texColour.loadData(kinects[0]->getPixels());
+
+// draw()
+cam.begin();
+ofScale(1000, -1000, -1000); // metres -> mm, camera space (+Y down, +Z forward) -> OF's
+texColour.bind();
+kinects[0]->drawPointCloud();
+texColour.unbind();
+cam.end();
+
+// exit()
+for (auto& k : kinects) k->close();
+```
+
+To put several cameras in one space, give each its camera -> world matrix with `setPointCloudTransformationMatrix()`: the
+vertices (and normals) come back already transformed, ready to merge or export.
+
+## Examples
+
+Same set as ofxK4a:
+
+* `example-streams` shows every stream of every connected Kinect: colour, depth, IR, colour registered to depth and the 3D point
+  cloud, tiled to fit the window. Double-click a view (or 1-5) to maximise it; space cycles devices. Shows capture fps and
+  per-frame cost.
+* `example-pointcloud` draws the point cloud (points or triangulated mesh, depth or colour resolution) textured with the colour
+  image.
+* `example-pointCloudTransform` moves, rotates and scales the point cloud on any axis around a pivot, using the addon's own
+  point cloud transform.
+* `example-shader` runs 2D feedback effects over the colour image and draws the mesh with a scene shader (colour grade, crop
+  box, vertex wave, lighting from the mesh normals).
+
+## Performance
+
+Measured on an i7-7700K + GTX 1080 Ti, one Kinect, CUDA pipeline (`getCaptureStats()`, ms of capture-thread work per frame):
+
+| Point cloud | Vertices | Work per frame | Capture rate |
+|---|---|---|---|
+| depth res, points | ~145k | 15 ms | 30 fps |
+| depth res, mesh | 217k, ~260k triangles | 22 ms | 30 fps |
+| colour res (step 2), points | ~330k | 18 ms | 30 fps |
+| colour res (step 2), mesh | 518k, ~630k triangles | 32 ms | 29 fps |
+
+Each camera has its own capture thread and the mesh build is split over the cores shared between the open cameras
+(`getBuildThreadCount()`), so cameras run in parallel as long as there are cores for them. Raise "Point cloud step" to cut the
+cost (and the GPU upload) on machines with many cameras.
+
+## Notes
+
+- libfreenect2's images are mirrored; `Settings::unmirror` (default on) flips images and point clouds to the true view.
+- Changing the bilateral / edge-aware depth filters or the depth clip range needs a reopen (`Settings`), as libfreenect2 rebuilds
+  its GPU programs for them.
+- Debug builds link `freenect2d` (libfreenect2's C++ API passes `std::string` across the DLL boundary, so Debug and Release
+  can't be mixed).
+- macOS: the Kinect must show up under SuperSpeed in System Information > USB; if not, replug the power while leaving USB
+  connected.
+
+Based on the excellent work by the [libfreenect2](https://github.com/OpenKinect/libfreenect2) team (@JoshBlake @floe and
+@christiankerl plus others). Original addon by Theo Watson.

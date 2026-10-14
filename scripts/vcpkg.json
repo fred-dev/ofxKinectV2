@@ -1,0 +1,6 @@
+{
+  "name": "libfreenect2-ofx-deps",
+  "version-string": "0.1",
+  "builtin-baseline": "44ccfd88b3eca6929d6d16398c7b19945c29a5f6",
+  "dependencies": [ "libusb", "libjpeg-turbo", "glfw3" ]
+}
