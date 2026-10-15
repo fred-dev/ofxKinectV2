@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
-# Builds libfreenect2 for ofxKinectV2 on Linux (x86_64 / aarch64), Release, with the same
+# Builds libfreenect2-metal for ofxKinectV2 on Linux (x86_64 / aarch64), Release, with the same
 # pipelines as the Windows build: CUDA (when nvcc is installed) + OpenCL + OpenGL + CPU,
 # TurboJPEG. Installs headers and the shared library into libs/libfreenect2.
 #
 # Keep the CMake options in sync with build_libfreenect2_windows.ps1.
 #
-# Requirements (Debian / Ubuntu):
+# Requirements (Debian / Ubuntu 22.04+):
+#   git clone https://github.com/hbmartin/libfreenect2-metal
 #   sudo apt install build-essential cmake pkg-config libusb-1.0-0-dev libturbojpeg0-dev \
 #                    libglfw3-dev ocl-icd-opencl-dev opencl-headers
-#   CUDA toolkit (optional) - nvcc on PATH or CUDA_HOME set
-#   udev rule for non-root access: sudo cp <libfreenect2>/platform/linux/udev/90-kinect2.rules /etc/udev/rules.d/
+#   CUDA toolkit (optional) - nvcc on PATH or CUDA_HOME set. libfreenect2-metal compiles CUDA
+#   with CMake's native CUDA support: no CUDA samples / helper_math.h needed.
+#   udev rule for non-root access: sudo cp <libfreenect2-metal>/platform/linux/udev/90-kinect2.rules /etc/udev/rules.d/
 #
-# Usage: ./build_libfreenect2_linux.sh /path/to/libfreenect2 [--no-cuda] [--no-opencl]
+# Usage: ./build_libfreenect2_linux.sh /path/to/libfreenect2-metal [--no-cuda] [--no-opencl]
 
 set -euo pipefail
 
-SOURCE="$(cd "${1:?usage: $0 /path/to/libfreenect2 [--no-cuda] [--no-opencl]}" && pwd)"
+SOURCE="$(cd "${1:?usage: $0 /path/to/libfreenect2-metal [--no-cuda] [--no-opencl]}" && pwd)"
 shift
 ADDON="$(cd "$(dirname "$0")/.." && pwd)"
 CUDA=ON
@@ -28,7 +30,9 @@ for arg in "$@"; do
 done
 
 CUDA_HOME="${CUDA_HOME:-/usr/local/cuda}"
-if [ "$CUDA" = ON ] && ! command -v nvcc >/dev/null && [ ! -x "$CUDA_HOME/bin/nvcc" ]; then
+NVCC="$(command -v nvcc || true)"
+[ -z "$NVCC" ] && [ -x "$CUDA_HOME/bin/nvcc" ] && NVCC="$CUDA_HOME/bin/nvcc"
+if [ "$CUDA" = ON ] && [ -z "$NVCC" ]; then
     echo "nvcc not found, building without CUDA"
     CUDA=OFF
 fi
@@ -45,11 +49,12 @@ CMAKE_ARGS=(
     -S "$SOURCE" -B "$SOURCE/build_ofx"
     -DCMAKE_BUILD_TYPE=Release
     -DCMAKE_INSTALL_PREFIX="$SOURCE/build_ofx/install"
-    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     -DBUILD_SHARED_LIBS=ON
     -DBUILD_EXAMPLES=ON
     -DBUILD_OPENNI2_DRIVER=OFF
-    -DENABLE_CXX11=ON
+    -DBUILD_TESTING=OFF
+    -DBUILD_CALIBRATION_TOOLS=OFF
+    -DENABLE_METAL=OFF
     -DENABLE_OPENGL=ON
     -DENABLE_OPENCL=$OPENCL
     -DENABLE_CUDA=$CUDA
@@ -58,19 +63,9 @@ CMAKE_ARGS=(
 )
 
 if [ "$CUDA" = ON ]; then
-    # CUDA 11+ no longer installs the samples; the kernels need helper_math.h from them.
-    SAMPLES="$SOURCE/depends/cuda_samples"
-    if [ ! -f "$SAMPLES/common/inc/helper_math.h" ]; then
-        mkdir -p "$SAMPLES/common/inc"
-        curl -sSfL -o "$SAMPLES/common/inc/helper_math.h" \
-            https://raw.githubusercontent.com/NVIDIA/cuda-samples/v12.1/Common/helper_math.h
-    fi
-    export NVCUDASAMPLES_ROOT="$SAMPLES"
-    # Maxwell to Ada plus PTX, same as Windows (Jetson: add 53 / 62 / 72 / 87 as needed).
-    NVCC="-Xcompiler;-fPIC"
-    for a in 52 61 75 86 89; do NVCC="$NVCC;-gencode=arch=compute_$a,code=sm_$a"; done
-    NVCC="$NVCC;-gencode=arch=compute_89,code=compute_89"
-    CMAKE_ARGS+=(-DCUDA_TOOLKIT_ROOT_DIR="$CUDA_HOME" "-DCUDA_NVCC_FLAGS=$NVCC")
+    # Maxwell to Ada, plus PTX for newer GPUs - same list as Windows. CUDA 13 dropped Maxwell /
+    # Pascal: remove 52 and 61 if nvcc refuses them. Jetson: use its own (53 / 62 / 72 / 87).
+    CMAKE_ARGS+=(-DCMAKE_CUDA_COMPILER="$NVCC" "-DCMAKE_CUDA_ARCHITECTURES=52-real;61-real;75-real;86-real;89")
 fi
 
 rm -f "$SOURCE/build_ofx/CMakeCache.txt"
@@ -86,5 +81,6 @@ cp -R "$SOURCE/build_ofx/install/include/libfreenect2/." "$INC_OUT/"
 cp -P "$SOURCE/build_ofx/install/lib/"libfreenect2.so* "$LIB_OUT/"
 
 echo
-echo "libfreenect2 installed into $ADDON/libs/libfreenect2 ($OF_PLATFORM, CUDA=$CUDA OpenCL=$OPENCL)"
-echo "Point it at the system libusb / turbojpeg at runtime; the project generator copies the .so into bin/libs."
+echo "libfreenect2-metal $(git -C "$SOURCE" rev-parse --short HEAD) installed into $ADDON/libs/libfreenect2 ($OF_PLATFORM, CUDA=$CUDA OpenCL=$OPENCL)"
+grep "define LIBFREENECT2_WITH" "$INC_OUT/config.h"
+echo "Check the app finds libfreenect2.so at run time (see HANDOFF_MAC_LINUX.md)."

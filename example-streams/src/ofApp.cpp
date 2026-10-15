@@ -204,9 +204,16 @@ void ofApp::draw()
 	{
 		auto& kinect = kinectDevices[currentKinect];
 		const auto stats = kinect->getCaptureStats();
-		status = "Device " + ofToString(currentKinect + 1) + "/" + ofToString(kinectDevices.size()) + " (" + kinect->getSerial() + ", " +
-			ofProtonect::toString(kinect->getPipelineType()) + "): " + ofToString(stats.fps, 1) + " fps, " +
+		const std::string pipeline = stats.pipeline.empty() ? ofProtonect::toString(kinect->getPipelineType()) : stats.pipeline;
+		status = "Device " + ofToString(currentKinect + 1) + "/" + ofToString(kinectDevices.size()) + " (" + kinect->getSerial() + ", " + pipeline +
+			", libfreenect2 " + ofxKinectV2::getLibraryVersion() + "): " + ofToString(stats.fps, 1) + " fps, " +
 			ofToString(stats.processMs, 1) + " ms per frame (cloud " + ofToString(stats.buildMs, 1) + " ms)";
+		if (stats.colorDepthOffsetMs >= 0) status += ", colour-depth " + ofToString(stats.colorDepthOffsetMs, 1) + " ms";
+		status += ", dropped " + ofToString(stats.droppedFrames);
+		if (!stats.connected)
+		{
+			ofDrawBitmapStringHighlight("DISCONNECTED: " + stats.lastError, 10, ofGetHeight() - 50, ofColor(160, 0, 0), ofColor::white);
+		}
 	}
 	status += "   app " + ofToString(ofGetFrameRate(), 1) + " fps";
 	ofDrawBitmapStringHighlight(status, 10, ofGetHeight() - 30);

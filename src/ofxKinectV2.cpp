@@ -274,7 +274,16 @@ bool ofxKinectV2::open(const std::string& serial, const Settings& s)
     config.EnableBilateralFilter = settings.bilateralFilter;
     config.EnableEdgeAwareFilter = settings.edgeAwareFilter;
 
-    if (!protonect.open(serial, settings.pipeline, settings.processingDevice, settings.enableRGB, settings.enableDepth, config))
+    ofProtonect::Options options;
+    options.pipeline = settings.pipeline;
+    options.processingDevice = settings.processingDevice;
+    options.enableColor = settings.enableRGB;
+    options.enableDepth = settings.enableDepth;
+    options.config = config;
+    options.jpegDecoder = settings.jpegDecoder;
+    options.alignByTimestamp = settings.alignByTimestamp;
+    options.maxFrameDeltaMs = settings.maxFrameDeltaMs;
+    if (!protonect.open(serial, options))
     {
         return false;
     }
@@ -335,6 +344,13 @@ void ofxKinectV2::threadedFunction()
         // A short timeout so close() never waits long on a stalled device.
         if (!protonect.grab(back, 500, settings.enableIR, settings.unmirror, settings.usePointCloud && options.bigPointCloud))
         {
+            // nothing for half a second: keep the health current (e.g. unplugged)
+            const auto health = protonect.getHealth();
+            lock();
+            stats.connected = health.connected;
+            stats.lastError = health.lastError;
+            stats.fps = 0.f;
+            unlock();
             continue;
         }
         // Work is timed from the end of the wait, so waiting for the camera isn't counted.
@@ -380,10 +396,16 @@ void ofxKinectV2::threadedFunction()
         lastFrameTime = now;
         grabAverage = ofLerp(grabAverage, protonect.getLastGrabMs() + (now - grabbed) / 1000.f, 0.1f);
 
+        const auto health = protonect.getHealth();
         lock();
         stats.fps = fpsAverage;
         stats.processMs = grabAverage;
         stats.buildMs = buildAverage;
+        stats.connected = health.connected;
+        stats.lastError = health.lastError;
+        stats.pipeline = health.pipeline;
+        stats.droppedFrames = health.droppedFrames;
+        stats.colorDepthOffsetMs = health.colorDepthOffsetMs;
         swapFrames(back, framesFront);
         depthBack.swap(depthPixelsFront);
         irBack.swap(irPixelsFront);

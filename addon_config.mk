@@ -20,12 +20,12 @@ common:
 vs:
 	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/include/osx libs/libfreenect2/include/osx/% libs/libfreenect2/include/linux% libs/libfreenect2/include/linux%/%
 	ADDON_SOURCES_EXCLUDE = libs/libfreenect2/include/osx/% libs/libfreenect2/include/linux%/%
-	# freenect2.dll, libusb-1.0.dll, turbojpeg.dll and glfw3.dll in lib/vs/x64 are copied
-	# next to the exe by the project generator (dll/x64 -> bin).
+	# freenect2(d).dll and its runtime (libusb-1.0, turbojpeg + spng + z, glfw3, cudart64_12) in
+	# lib/vs/x64 are copied next to the exe by the project generator (dll/x64 -> bin).
 
 osx:
 	# libfreenect2.a is static: its own dependencies are linked here.
-	ADDON_FRAMEWORKS = OpenCL VideoToolbox CoreVideo CoreMedia IOKit CoreFoundation Security
+	ADDON_FRAMEWORKS = Metal Foundation OpenCL VideoToolbox CoreVideo CoreMedia IOKit CoreFoundation Security
 	ADDON_INCLUDES_EXCLUDE = libs/libfreenect2/include/vs libs/libfreenect2/include/vs/% libs/libfreenect2/include/linux% libs/libfreenect2/include/linux%/%
 	ADDON_SOURCES_EXCLUDE = libs/libfreenect2/include/vs/% libs/libfreenect2/include/linux%/%
 

@@ -86,6 +86,15 @@ bool ofProtonect::isOpenCLSupported()
 #endif
 }
 
+bool ofProtonect::isMetalSupported()
+{
+#if defined(LIBFREENECT2_WITH_METAL_SUPPORT)
+    return true;
+#else
+    return false;
+#endif
+}
+
 std::string ofProtonect::toString(PacketPipelineType type)
 {
     switch (type)
@@ -97,8 +106,18 @@ std::string ofProtonect::toString(PacketPipelineType type)
         case PacketPipelineType::OPENCLKDE: return "OPENCLKDE";
         case PacketPipelineType::CUDA: return "CUDA";
         case PacketPipelineType::CUDAKDE: return "CUDAKDE";
+        case PacketPipelineType::METAL: return "METAL";
     }
     return "UNKNOWN";
+}
+
+std::string ofProtonect::getLibraryVersion()
+{
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    return libfreenect2::getVersion();
+#else
+    return LIBFREENECT2_VERSION;
+#endif
 }
 
 std::shared_ptr<libfreenect2::Freenect2> ofProtonect::getContext()
@@ -130,8 +149,47 @@ ofProtonect::~ofProtonect()
     close();
 }
 
-libfreenect2::PacketPipeline* ofProtonect::createPipeline(PacketPipelineType type, int processingDevice) const
+libfreenect2::PacketPipeline* ofProtonect::createPipeline(PacketPipelineType type, const Options& options) const
 {
+    const int device = options.processingDevice;
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    libfreenect2::PacketPipelineConfig config;
+    switch (options.jpegDecoder)
+    {
+        case JpegDecoder::TURBOJPEG: config.rgb_decoder = libfreenect2::PacketPipelineConfig::TurboJPEG; break;
+        case JpegDecoder::VIDEOTOOLBOX: config.rgb_decoder = libfreenect2::PacketPipelineConfig::VideoToolbox; break;
+        case JpegDecoder::VAAPI: config.rgb_decoder = libfreenect2::PacketPipelineConfig::VAAPI; break;
+        default: config.rgb_decoder = libfreenect2::PacketPipelineConfig::Auto; break;
+    }
+    config.allow_fallback = true; // a hardware decoder that fails falls back to TurboJPEG
+    switch (type)
+    {
+        case PacketPipelineType::CPU:
+            return new libfreenect2::CpuPacketPipeline(config);
+#if defined(LIBFREENECT2_WITH_OPENGL_SUPPORT)
+        case PacketPipelineType::OPENGL:
+            return new libfreenect2::OpenGLPacketPipeline(config);
+#endif
+#if defined(LIBFREENECT2_WITH_OPENCL_SUPPORT)
+        case PacketPipelineType::OPENCL:
+            return new libfreenect2::OpenCLPacketPipeline(config, device);
+        case PacketPipelineType::OPENCLKDE:
+            return new libfreenect2::OpenCLKdePacketPipeline(config, device);
+#endif
+#if defined(LIBFREENECT2_WITH_CUDA_SUPPORT)
+        case PacketPipelineType::CUDA:
+            return new libfreenect2::CudaPacketPipeline(config, device);
+        case PacketPipelineType::CUDAKDE:
+            return new libfreenect2::CudaKdePacketPipeline(config, device);
+#endif
+#if defined(LIBFREENECT2_WITH_METAL_SUPPORT)
+        case PacketPipelineType::METAL:
+            return new libfreenect2::MetalPacketPipeline(config, device);
+#endif
+        default:
+            return nullptr;
+    }
+#else
     switch (type)
     {
         case PacketPipelineType::CPU:
@@ -142,31 +200,27 @@ libfreenect2::PacketPipeline* ofProtonect::createPipeline(PacketPipelineType typ
 #endif
 #if defined(LIBFREENECT2_WITH_OPENCL_SUPPORT)
         case PacketPipelineType::OPENCL:
-            return new libfreenect2::OpenCLPacketPipeline(processingDevice);
+            return new libfreenect2::OpenCLPacketPipeline(device);
         case PacketPipelineType::OPENCLKDE:
-            return new libfreenect2::OpenCLKdePacketPipeline(processingDevice);
+            return new libfreenect2::OpenCLKdePacketPipeline(device);
 #endif
 #if defined(LIBFREENECT2_WITH_CUDA_SUPPORT)
         case PacketPipelineType::CUDA:
-            return new libfreenect2::CudaPacketPipeline(processingDevice);
+            return new libfreenect2::CudaPacketPipeline(device);
         case PacketPipelineType::CUDAKDE:
-            return new libfreenect2::CudaKdePacketPipeline(processingDevice);
+            return new libfreenect2::CudaKdePacketPipeline(device);
 #endif
         default:
             return nullptr;
     }
+#endif
 }
 
-bool ofProtonect::open(const std::string& _serial,
-                       PacketPipelineType requestedType,
-                       int processingDevice,
-                       bool enableColor,
-                       bool enableDepth,
-                       const libfreenect2::Freenect2Device::Config& config)
+bool ofProtonect::open(const std::string& _serial, const Options& options)
 {
     close();
 
-    if (!enableColor && !enableDepth)
+    if (!options.enableColor && !options.enableDepth)
     {
         ofLogError("ofProtonect::open") << "nothing to stream: colour and depth are both disabled";
         return false;
@@ -176,21 +230,31 @@ bool ofProtonect::open(const std::string& _serial,
 
     // The requested pipeline first, then the others from fastest to slowest. Each attempt
     // needs a new pipeline: libfreenect2 deletes the pipeline when openDevice() fails.
+    const PacketPipelineType requestedType = options.pipeline;
     std::vector<PacketPipelineType> candidates;
     if (requestedType != PacketPipelineType::DEFAULT) candidates.push_back(requestedType);
-    for (auto type : { PacketPipelineType::CUDA, PacketPipelineType::OPENCL, PacketPipelineType::CPU })
+    for (auto type : { PacketPipelineType::METAL, PacketPipelineType::CUDA, PacketPipelineType::OPENCL, PacketPipelineType::CPU })
     {
         if (type != requestedType) candidates.push_back(type);
     }
 
     for (auto type : candidates)
     {
-        libfreenect2::PacketPipeline* pipeline = createPipeline(type, processingDevice);
+        libfreenect2::PacketPipeline* pipeline = createPipeline(type, options);
         if (!pipeline)
         {
-            ofLogNotice("ofProtonect::open") << toString(type) << " pipeline is not available in this libfreenect2 build";
+            ofLogVerbose("ofProtonect::open") << toString(type) << " pipeline is not in this libfreenect2 build";
             continue;
         }
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+        // e.g. CUDA without an NVIDIA GPU: skip it before touching the device
+        if (!pipeline->good())
+        {
+            ofLogNotice("ofProtonect::open") << toString(type) << " pipeline can't run on this machine";
+            delete pipeline;
+            continue;
+        }
+#endif
         dev = context->openDevice(_serial, pipeline);
         if (dev)
         {
@@ -212,19 +276,36 @@ bool ofProtonect::open(const std::string& _serial,
     }
 
     int types = 0;
-    if (enableColor) types |= libfreenect2::Frame::Color;
-    if (enableDepth) types |= libfreenect2::Frame::Ir | libfreenect2::Frame::Depth;
+    if (options.enableColor) types |= libfreenect2::Frame::Color;
+    if (options.enableDepth) types |= libfreenect2::Frame::Ir | libfreenect2::Frame::Depth;
 
-    listener.reset(new libfreenect2::SyncMultiFrameListener(types));
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    if (options.alignByTimestamp && options.enableColor && options.enableDepth)
+    {
+        // device timestamps tick every 0.125 ms
+        const uint32_t maxTicks = static_cast<uint32_t>(std::max(1.f, options.maxFrameDeltaMs * 8.f));
+        alignedListener = new libfreenect2::TimestampAlignedFrameListener(types, maxTicks);
+        listener.reset(alignedListener);
+    }
+    else
+#endif
+    {
+        syncListener = new libfreenect2::SyncMultiFrameListener(types);
+        listener.reset(syncListener);
+    }
     dev->setColorFrameListener(listener.get());
     dev->setIrAndDepthFrameListener(listener.get());
-    dev->setConfiguration(config);
+    dev->setConfiguration(options.config);
 
-    if (!dev->startStreams(enableColor, enableDepth))
+    if (!dev->startStreams(options.enableColor, options.enableDepth))
     {
         ofLogError("ofProtonect::open") << "error starting streams for: " << _serial;
         dev->close();
         listener.reset();
+        syncListener = nullptr;
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+        alignedListener = nullptr;
+#endif
         delete dev;
         dev = nullptr;
         return false;
@@ -236,23 +317,79 @@ bool ofProtonect::open(const std::string& _serial,
     colorParams = dev->getColorCameraParams();
 
     ofLogNotice("ofProtonect::open") << "opened " << serial << " (firmware " << firmware << ") with the "
-                                     << toString(pipelineType) << " pipeline";
+                                     << toString(pipelineType) << " pipeline, libfreenect2 " << getLibraryVersion();
 
     registration.reset(new libfreenect2::Registration(irParams, colorParams));
     undistorted.reset(new libfreenect2::Frame(512, 424, 4));
     registered.reset(new libfreenect2::Frame(512, 424, 4));
 
-    bColor = enableColor;
-    bDepth = enableDepth;
+    bColor = options.enableColor;
+    bDepth = options.enableDepth;
     bOpened = true;
     return true;
+}
+
+bool ofProtonect::waitForFrames(int timeoutMs)
+{
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    if (alignedListener) return alignedListener->waitForNewFrame(frameMap, timeoutMs);
+#endif
+    return syncListener && syncListener->waitForNewFrame(frameMap, timeoutMs);
+}
+
+void ofProtonect::releaseFrames()
+{
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    if (alignedListener)
+    {
+        alignedListener->release(frameMap);
+        return;
+    }
+#endif
+    if (syncListener) syncListener->release(frameMap);
+}
+
+ofProtonect::Health ofProtonect::getHealth()
+{
+    Health h;
+    std::lock_guard<std::mutex> lock(controlMutex);
+    if (!dev)
+    {
+        h.connected = false;
+        h.state = "closed";
+        return h;
+    }
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    switch (dev->getState())
+    {
+        case libfreenect2::DeviceCreated: h.state = "created"; break;
+        case libfreenect2::DeviceOpen: h.state = "open"; break;
+        case libfreenect2::DeviceStreaming: h.state = "streaming"; break;
+        case libfreenect2::DeviceDisconnected: h.state = "disconnected"; h.connected = false; break;
+        case libfreenect2::DeviceError: h.state = "error"; h.connected = false; break;
+        case libfreenect2::DeviceClosed: h.state = "closed"; h.connected = false; break;
+    }
+    h.lastError = dev->getLastError();
+    h.pipeline = dev->getPacketPipelineName();
+    const auto stats = dev->getRuntimeStatistics();
+    h.droppedFrames = stats.color.sequence_gaps + stats.depth.sequence_gaps;
+    if (alignedListener)
+    {
+        const auto aligned = alignedListener->getStatistics();
+        h.droppedFrames += aligned.dropped;
+        if (aligned.delivered > 0) h.colorDepthOffsetMs = aligned.last_delta_ticks / 8.f;
+    }
+#else
+    h.pipeline = toString(pipelineType);
+#endif
+    return h;
 }
 
 bool ofProtonect::grab(Frames& frames, int timeoutMs, bool keepIr, bool unmirror, bool wantBigDepth)
 {
     if (!bOpened) return false;
 
-    if (!listener->waitForNewFrame(frameMap, timeoutMs))
+    if (!waitForFrames(timeoutMs))
     {
         return false;
     }
@@ -304,7 +441,7 @@ bool ofProtonect::grab(Frames& frames, int timeoutMs, bool keepIr, bool unmirror
     }
 
     const int colorW = rgb ? static_cast<int>(rgb->width) : 0;
-    listener->release(frameMap);
+    releaseFrames();
 
     if (frames.hasRegistered)
     {
@@ -390,6 +527,10 @@ void ofProtonect::close()
         dev = nullptr;
     }
     listener.reset();
+    syncListener = nullptr;
+#ifdef OFXKINECTV2_LIBFREENECT2_04
+    alignedListener = nullptr;
+#endif
     registration.reset();
     undistorted.reset();
     registered.reset();

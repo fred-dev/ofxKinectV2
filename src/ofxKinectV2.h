@@ -26,6 +26,7 @@ class ofxKinectV2: public ofThread
 {
 public:
     using PacketPipelineType = ofProtonect::PacketPipelineType;
+    using JpegDecoder = ofProtonect::JpegDecoder;
 
     struct KinectDeviceInfo
     {
@@ -36,8 +37,8 @@ public:
 
     struct Settings
     {
-        /// DEFAULT picks CUDA, then OpenCL, then CPU. A pipeline that fails to open the
-        /// device falls back to the next one.
+        /// DEFAULT picks Metal (macOS), then CUDA, then OpenCL, then CPU. A pipeline that
+        /// can't run on this machine or fails to open the device falls back to the next one.
         PacketPipelineType pipeline = PacketPipelineType::DEFAULT;
         /// GPU index for the CUDA / OpenCL pipelines, -1 for the default device.
         int processingDevice = -1;
@@ -70,6 +71,19 @@ public:
         float maxDepth = 4.5f;
         bool bilateralFilter = true;
         bool edgeAwareFilter = true;
+
+        /// Colour JPEG decoder (libfreenect2-metal): DEFAULT, TURBOJPEG (CPU), VIDEOTOOLBOX
+        /// (macOS hardware) or VAAPI (Linux, Intel). A hardware decoder that fails falls back
+        /// to TurboJPEG.
+        JpegDecoder jpegDecoder = JpegDecoder::DEFAULT;
+        /// EXPERIMENTAL - leave off. Pair each depth frame with the colour frame nearest in
+        /// device time (libfreenect2-metal's TimestampAlignedFrameListener) instead of the
+        /// latest of each. With libfreenect2-metal 0.4 (600cef5) on Windows it delivered no
+        /// frames at all, even with a 500 ms window, and crashed when the device was deleted;
+        /// colour timestamps also run a constant ~56 ms ahead of depth, so "nearest" isn't
+        /// "same moment". Retest on macOS / newer versions before relying on it.
+        bool alignByTimestamp = false;
+        float maxFrameDeltaMs = 25.f;
     };
 
     ofxKinectV2();
@@ -113,13 +127,25 @@ public:
     /// processing each frame after it arrives (registration, flips, depth/IR images, point
     /// cloud), and the point cloud's share of it. With several cameras each one has its own
     /// thread, so processMs only has to stay under ~33 ms per camera for full rate.
+    ///
+    /// Plus the device's health (libfreenect2-metal): whether it is still connected, the
+    /// last error, frames lost on USB or while pairing colour and depth, and how far apart in
+    /// device time the paired colour and depth frames were.
     struct CaptureStats
     {
         float fps = 0.f;
         float processMs = 0.f;
         float buildMs = 0.f;
+        bool connected = true;
+        std::string lastError;
+        std::string pipeline;          ///< libfreenect2's name for the pipeline in use
+        uint64_t droppedFrames = 0;
+        float colorDepthOffsetMs = -1; ///< -1: unknown
     };
     CaptureStats getCaptureStats();
+
+    /// libfreenect2's version, e.g. "0.4.0".
+    static std::string getLibraryVersion() { return ofProtonect::getLibraryVersion(); }
 
     OF_DEPRECATED_MSG("Use getPixels()", ofPixels getRgbPixels());
 

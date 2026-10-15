@@ -68,20 +68,33 @@ class LIBFREENECT2_API Frame
   size_t bytes_per_pixel; ///< Number of bytes in a pixel. If frame format is 'Raw' this is the buffer size.
   unsigned char* data;    ///< Data of the frame (aligned). @see See Frame::Type for pixel format.
   uint32_t timestamp;     ///< Unit: 0.125 millisecond. Usually incrementing by 266 (30Hz) or 533 (15Hz).
+  uint64_t arrival_timestamp_us; ///< Monotonic host time of the first contributing USB transfer, in microseconds.
   uint32_t sequence;      ///< Increasing frame sequence number
   float exposure;         ///< From 0.5 (very bright) to ~60.0 (fully covered)
   float gain;             ///< From 1.0 (bright) to 1.5 (covered)
   float gamma;            ///< From 1.0 (bright) to 6.4 (covered)
   uint32_t status;        ///< zero if ok; non-zero for errors.
-  Format format;          ///< Byte format. Informative only, doesn't indicate errors.
+  Format format;          ///< Byte format. Validated by consumers such as Registration::apply()
+                          ///< and the vision helpers; the constructor defaults it to Invalid, so
+                          ///< callers wrapping their own buffers must set it explicitly.
 
   /** Construct a new frame.
-   * @param width Width in pixel
-   * @param height Height in pixel
-   * @param bytes_per_pixel Bytes per pixel
-   * @param data_ Memory to store frame data. If `NULL`, new memory is allocated.
+   * @param width_arg Width in pixel
+   * @param height_arg Height in pixel
+   * @param bytes_per_pixel_arg Bytes per pixel
+   * @param data_arg Memory to store frame data. If `NULL`, new memory is allocated.
    */
-  Frame(size_t width, size_t height, size_t bytes_per_pixel, unsigned char *data_ = NULL);
+  Frame(size_t width_arg, size_t height_arg, size_t bytes_per_pixel_arg,
+        unsigned char *data_arg = NULL);
+
+  /** Construct a frame with an explicit pixel format.
+   *
+   * This overload is intended for callers wrapping externally owned image
+   * buffers. Consumers such as Registration validate #format and will reject
+   * the legacy constructor's default #Invalid value.
+   */
+  Frame(size_t width_arg, size_t height_arg, size_t bytes_per_pixel_arg, unsigned char* data_arg,
+        Format format_arg);
   virtual ~Frame();
 
   protected:

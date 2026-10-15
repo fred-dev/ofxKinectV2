@@ -2,17 +2,22 @@ ofxKinectV2
 ===========
 
 > **About this fork:** Fork of [ofTheo/ofxKinectV2](https://github.com/ofTheo/ofxKinectV2), used for *synk*. Rebuilt around
-> current libfreenect2 with CUDA / OpenCL depth decoding, several Kinects at once, and point clouds / meshes that use the same
-> conventions as [ofxK4a](../ofxK4a) so Kinect v2 and Azure Kinect clouds can be combined in one scene.
+> [libfreenect2-metal](https://github.com/hbmartin/libfreenect2-metal) with Metal / CUDA / OpenCL depth decoding, several
+> Kinects at once, and point clouds / meshes that use the same conventions as [ofxK4a](../ofxK4a) so Kinect v2 and Azure
+> Kinect clouds can be combined in one scene.
 
 openFrameworks addon for the Kinect for Windows v2 / Xbox One Kinect, through
-[libfreenect2](https://github.com/OpenKinect/libfreenect2) (the Kinect SDK 2.0 is not needed, so any number of Kinects can be
-used on one machine, bandwidth permitting).
+[libfreenect2-metal](https://github.com/hbmartin/libfreenect2-metal) (a maintained fork of
+[libfreenect2](https://github.com/OpenKinect/libfreenect2) with a Metal pipeline for Apple Silicon and the 0.4 API). The Kinect
+SDK 2.0 is not needed, so any number of Kinects can be used on one machine, bandwidth permitting.
 
 ## Features
 
 - Several Kinects at once, each on its own capture thread. One libfreenect2 context is shared by every device.
-- Depth decoding on the GPU: CUDA or OpenCL (or CPU), picked automatically with fallback (`PacketPipelineType::DEFAULT`).
+- Depth decoding on the GPU: Metal (macOS), CUDA or OpenCL (or CPU), picked automatically with fallback
+  (`PacketPipelineType::DEFAULT`); pipelines that can't run on the machine are skipped before the device is opened.
+- Colour JPEG decoder choice (`Settings::jpegDecoder`: TurboJPEG, VideoToolbox on macOS, VA-API on Linux), with fallback to
+  TurboJPEG.
 - Colour (1920 x 1080), depth, IR, colour registered to depth, all un-mirrored (libfreenect2 hands out mirror images).
 - Point cloud or triangulated mesh with normals, built on the capture thread:
   - metres, camera space with +X right, +Y down, +Z forward - the same as ofxK4a;
@@ -23,7 +28,8 @@ used on one machine, bandwidth permitting).
     see get no colour instead of the colour of whatever is in front of them;
   - optional edge-preserving depth denoise, step (decimation), camera -> world transformation matrix.
 - Colour camera controls (exposure, gain, white balance) as `ofParameter`s, safe before and after `open()`.
-- Capture statistics per camera (`getCaptureStats()`: fps, ms of work per frame, ms of it spent on the point cloud).
+- Capture statistics and device health per camera (`getCaptureStats()`: fps, ms of work per frame, ms of it spent on the
+  point cloud, connected / last error, frames dropped on USB, libfreenect2's pipeline name). `getLibraryVersion()`.
 
 ## Installation
 
@@ -39,9 +45,9 @@ used on one machine, bandwidth permitting).
    `C1900: Il mismatch between 'P1' version ... and 'P2' version ...`. Generate with the `vs2026` template, or set
    Project > Properties > General > Platform Toolset to the same version for both projects.
 
-libfreenect2 is prebuilt in `libs/libfreenect2` (x64, Release and Debug, CUDA + OpenCL + OpenGL + CPU pipelines). The project
-generator links it and copies its DLLs next to the exe. The CUDA pipeline needs an NVIDIA driver; without one the OpenCL or CPU
-pipeline is used.
+libfreenect2-metal 0.4 is prebuilt in `libs/libfreenect2` (x64, Release and Debug, CUDA + OpenCL + OpenGL + CPU pipelines;
+rebuild with `scripts/build_libfreenect2_windows.ps1`). The project generator links it and copies its DLLs, including the CUDA
+runtime, next to the exe. The CUDA pipeline needs an NVIDIA driver; without one the OpenCL or CPU pipeline is used.
 
 ### macOS / Linux
 
@@ -109,6 +115,9 @@ Measured on an i7-7700K + GTX 1080 Ti, one Kinect, CUDA pipeline (`getCaptureSta
 | colour res (step 2), points | ~330k | 18 ms | 30 fps |
 | colour res (step 2), mesh | 518k, ~630k triangles | 32 ms | 29 fps |
 
+The colour camera drops to 15 fps in low light, and the synchronised colour + depth frames follow it: light the scene well
+for 30 fps.
+
 Each camera has its own capture thread and the mesh build is split over the cores shared between the open cameras
 (`getBuildThreadCount()`), so cameras run in parallel as long as there are cores for them. Raise "Point cloud step" to cut the
 cost (and the GPU upload) on machines with many cameras.
@@ -118,6 +127,9 @@ cost (and the GPU upload) on machines with many cameras.
 - libfreenect2's images are mirrored; `Settings::unmirror` (default on) flips images and point clouds to the true view.
 - Changing the bilateral / edge-aware depth filters or the depth clip range needs a reopen (`Settings`), as libfreenect2 rebuilds
   its GPU programs for them.
+- `Settings::alignByTimestamp` (pair colour and depth by device timestamp, libfreenect2-metal's
+  `TimestampAlignedFrameListener`) is experimental and off: with libfreenect2-metal 0.4 on Windows it delivered no frames.
+  Colour timestamps also run ~56 ms ahead of depth. See `scripts/HANDOFF_MAC_LINUX.md`.
 - Debug builds link `freenect2d` (libfreenect2's C++ API passes `std::string` across the DLL boundary, so Debug and Release
   can't be mixed).
 - macOS: the Kinect must show up under SuperSpeed in System Information > USB; if not, replug the power while leaving USB

@@ -206,8 +206,9 @@ void ofApp::update()
 	{
 		// Tagged OF_PIXELS_BGRA, so openFrameworks uploads it in the right channel order.
 		texColour.allocate(colourPix);
-		pingPong.allocate(colourPix.getWidth(), colourPix.getHeight(), GL_RGBA);
-		effectOutput.allocate(colourPix.getWidth(), colourPix.getHeight(), GL_RGBA);
+		const int w = int(colourPix.getWidth()), h = int(colourPix.getHeight());
+		pingPong.allocate(w, h, GL_RGBA);
+		effectOutput.allocate(w, h, GL_RGBA);
 		effectOutput.begin();
 		ofClear(0, 255);
 		effectOutput.end();
