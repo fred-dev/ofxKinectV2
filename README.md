@@ -33,6 +33,11 @@ used on one machine, bandwidth permitting).
 2. Use a USB 3 port; every Kinect v2 needs most of a USB 3 controller's bandwidth, so put each one on its own controller
    (add-in USB 3 cards) when using several.
 3. Clone into `openFrameworks/addons` and generate projects with the projectGenerator.
+4. Make the project's platform toolset match the one `openframeworksLib` was built with. Visual Studio 2026 retargets
+   `openframeworksLib.vcxproj` to `v145` while the `vs` template still generates `v143` apps. The Release OF lib uses
+   whole-program optimisation, so the mismatch fails at link time with
+   `C1900: Il mismatch between 'P1' version ... and 'P2' version ...`. Generate with the `vs2026` template, or set
+   Project > Properties > General > Platform Toolset to the same version for both projects.
 
 libfreenect2 is prebuilt in `libs/libfreenect2` (x64, Release and Debug, CUDA + OpenCL + OpenGL + CPU pipelines). The project
 generator links it and copies its DLLs next to the exe. The CUDA pipeline needs an NVIDIA driver; without one the OpenCL or CPU
