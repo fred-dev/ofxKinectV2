@@ -1,4 +1,4 @@
-# Hand-off: building ofxKinectV2 on macOS and Linux
+# Hand-off: building ofxKinectV2 on macOS and Linux (macOS done)
 
 Notes for whoever (person or agent) brings this addon up on macOS and Linux. Windows is done and
 tested; this file says what exists, what still has to happen per platform, and how to check it.
@@ -12,12 +12,13 @@ tested; this file says what exists, what still has to happen per platform, and h
 - **Windows x64 is finished and hardware-tested** (Kinect v2 on libusbK, GTX 1080 Ti, CUDA / OpenCL /
   CPU, openFrameworks 0.12 git master, VS 2026 apps, library built with VS 2022's compiler). All four
   examples build in Release and Debug from a projectGenerator project with no manual edits and stream.
-- **macOS and Linux have not been built yet.** `scripts/build_libfreenect2_macos.sh` and
-  `scripts/build_libfreenect2_linux.sh` match the Windows options but have never run. Expect small fixes.
-- The macOS files in the repo (`libs/libfreenect2/include/osx`, `lib/osx/libfreenect2.a`,
-  `usb-1.0.0-latest-superspeed.a`) are the **old 2019 upstream 0.2 build**, almost certainly x86_64
-  only. Replace them; the mac script deletes and rewrites `lib/osx` and `include/osx`.
-- There is no Linux build in the repo yet (`include/linux64`, `lib/linux64` don't exist).
+- **macOS is finished and hardware-tested** (M3 Ultra, macOS 27, Xcode 27, Kinect v2): all four examples
+  build from projectGenerator projects and stream on Metal + VideoToolbox at 30 fps. The libraries in
+  `lib/osx` are universal (arm64 + x86_64, macOS 11.0+); x86_64 was run under Rosetta, not on an Intel Mac.
+  macOS needs two patches on libfreenect2-metal (`scripts/patches/libfreenect2-metal`). See "macOS (done)".
+- **Linux has not been built yet.** `scripts/build_libfreenect2_linux.sh` matches the Windows options but
+  has never run. Expect small fixes. There is no Linux build in the repo yet (`include/linux64`,
+  `lib/linux64` don't exist).
 
 ## Rules
 
@@ -33,44 +34,59 @@ tested; this file says what exists, what still has to happen per platform, and h
 - Generated projects, `bin/` output, `obj/` and `dll/` are git-ignored; commit only sources, scripts,
   `addons.make`, `bin/data`, and the libfreenect2 headers + libraries for your platform.
 
-## macOS (Apple Silicon first)
+## macOS (done)
 
-1. Full Xcode (for the Metal compiler; on Xcode 26+: `xcodebuild -downloadComponent MetalToolchain`),
-   then `brew install cmake pkg-config libusb jpeg-turbo glfw`. Use a **native arm64** terminal.
-2. `./scripts/build_libfreenect2_macos.sh /path/to/libfreenect2-metal`
-   - Static `libfreenect2.a` with **Metal**, OpenCL, OpenGL and CPU pipelines; the Metal shader library
-     is embedded in it. Copies it plus `libusb-1.0.a` / `libturbojpeg.a` into `lib/osx`, headers into
-     `include/osx`.
-3. Generate `example-streams` with the projectGenerator, build, run: the status line should say
-   `metal` and libfreenect2 0.4.0. ofxKinectV2's DEFAULT pipeline order is Metal > CUDA > OpenCL > CPU.
+How it was brought up, and what to know when rebuilding (build steps: `scripts/README.md`, macOS).
 
-Things likely to need attention:
+**Defaults on macOS:** `PacketPipelineType::DEFAULT` opens with Metal (then OpenCL, CPU) and
+`JpegDecoder::DEFAULT` decodes colour with VideoToolbox, TurboJPEG standing by as run-time fallback.
+Checked in a running example: `RgbDecoderFallback` -> `VTRgbPacketProcessor` and
+`MetalDepthPacketProcessor` on the stacks, TurboJPEG never called.
 
-- **Link errors.** A static libfreenect2 needs everything it uses linked into the app. The `osx:` section
-  of `addon_config.mk` lists `Metal Foundation OpenCL VideoToolbox CoreVideo CoreMedia IOKit CoreFoundation
-  Security`; add anything else the linker asks for (e.g. `QuartzCore`).
-  Homebrew's `libusb-1.0.a` may also need `-lobjc`.
-- **Architecture.** Homebrew libraries are single-arch. If the OF project builds universal, either set it
-  to the native arch or build the dependencies for both (`CMAKE_OSX_ARCHITECTURES`) and `lipo`. Record it.
-- **VideoToolbox (hardware JPEG decoding).** libfreenect2-metal turns it OFF on Apple Silicon because its
-  decoder crashes on M1 and later; TurboJPEG is used instead. ofxKinectV2 already exposes the choice:
-  `Settings::jpegDecoder = ofxKinectV2::JpegDecoder::VIDEOTOOLBOX` (falls back to TurboJPEG when the
-  decoder fails, `PacketPipelineConfig::allow_fallback`). Building with `--videotoolbox` compiles it in.
-- The Kinect must appear under **SuperSpeed** in System Information > USB.
+**Patches on libfreenect2-metal** (`scripts/patches/libfreenect2-metal`, on 600cef5; send upstream):
 
-### Then: acceleration from kinect4metal (optional, Mac only)
+1. *VideoToolbox on Apple Silicon.* The fork turned VideoToolbox off on M1+ because it "crashed". Cause: a
+   packet the hardware decoder rejects (truncated / corrupt JPEG) yields no pixel buffer, and the old code
+   still emitted a frame with `data == NULL`. Rewritten: every status checked, bad packets dropped (as
+   TurboJPEG does), session recreated if the system invalidates it, `good()` false after 30 failures in a
+   row and wrapped in `RgbDecoderFallback`, so TurboJPEG takes over at run time. IOSurface-backed BGRA
+   output, handed over without a copy. Unit tests added (parity with TurboJPEG, corrupt packets, fallback,
+   4 decoders in parallel; clean under ASan + UBSan). `ENABLE_VIDEOTOOLBOX` now defaults ON.
+2. *Claiming the interfaces.* The fork refuses to claim when `libusb_kernel_driver_active()` returns 1.
+   On macOS that is true for **any** IO-registry child of the interface - another process's user client,
+   or the entries macOS creates while it re-matches the interfaces after the Kinect re-enumerates (which
+   it does every time it's closed). 2 of 3 opens failed. On Apple platforms it now claims directly and
+   retries for up to 2 s.
 
-[kinect4metal](https://github.com/RESMP-DEV/kinect4metal) is a different, macOS-only libfreenect2 fork.
-The user wants its **accelerations, not its structure** (no Swift / framework / IOKit rewrite). Candidates,
-to port into a libfreenect2-metal checkout (or a branch of it) and measure against what's there:
+**Build problems solved in the script** (not the fork): Homebrew's static libusb / libjpeg-turbo target
+the build machine's macOS (27) - built from source for 11.0 instead, libusb without `pipe2()` (macOS 27+);
+FreeImage's libjpeg inside `openFrameworks.a` captured TurboJPEG's `jpeg_*` calls (`tjInitDecompress()`
+failed in every OF app) - TurboJPEG is pre-linked exporting only `tj*`; universal builds use OF's GLFW.
 
-- `src/vt_rgb_packet_processor.cpp`: a VideoToolbox JPEG decoder kinect4metal says works on Apple
-  Silicon, decoding straight into CVPixelBuffers / Metal textures. The most valuable piece: the colour
-  JPEG decode is a big share of each camera's CPU time (TurboJPEG at 1080p).
-- `src/metal_depth_packet_processor.*` / `src/metal/`: compare with libfreenect2-metal's Metal depth
-  processor (speed, unified-memory handling, avoiding copies).
-- Accelerate / vImage use for colour conversion or registration, if any.
-Measure with ofxKinectV2's `getCaptureStats()` (process ms per frame) and the fork's Protonect log.
+**kinect4metal** (the acceleration candidates listed here before):
+
+- *VideoToolbox decoder:* the idea was right, the code wasn't portable - it calls `-contents` on an
+  `MTLTexture` (an `MTLBuffer` method: it would throw) and "falls back" to a ProRes decoder for JPEG
+  data. The decoder above was written fresh, keeping its IOSurface / Metal-compatible output.
+  Measured (M3 Ultra, 1080p 4:2:2): ~0.9 ms CPU per frame vs 3-12 ms TurboJPEG; on the Kinect 3.9 ms wall.
+- *Metal depth processor:* not a Kinect decoder - it reads raw depth as 16-bit pixels, while the sensor
+  sends 11-bit packed phase images. Nothing to take. libfreenect2-metal's own Metal pipeline decodes a
+  frame in 0.5 ms (0.13 ms CPU); OpenCL 0.68 ms; CPU 28.8 ms.
+- No Accelerate / vImage use to port.
+
+**Findings on macOS:**
+
+- `TimestampAlignedFrameListener` (`Settings::alignByTimestamp`) **works** here (30 fps, clean close),
+  so its Windows failure is a Windows bug worth reporting. Colour runs 55.75 ms ahead of depth, as on
+  Windows; with a window under 56 ms it pairs with the neighbouring colour frame (22.5 ms off).
+- Logitech G HUB's `lghub_agent` opens every USB device and blocks the Kinect: quit it.
+- The Kinect re-enumerates on every close (libusb reports `NO_DEVICE` while releasing - harmless); a
+  reopen in the same process takes ~2 s and then streams normally.
+- Xcode 27 refuses OF's deployment target of 11.5: projects need `MACOSX_DEPLOYMENT_TARGET = 12.0`.
+- Timing (one Kinect, Metal, `processMs`): points 4.6 ms, depth-res mesh 5.7 ms, colour-res points 8 ms,
+  colour-res mesh (step 1) 16.5 ms - Windows reference 15 / 20 / - / 28-30 (step 2). x86_64 under
+  Rosetta: 6.6 ms for points.
+- Still to do: run on an Intel Mac (Metal on Intel / AMD GPUs, Intel USB controllers).
 
 ## Linux
 
@@ -99,8 +115,8 @@ Things likely to need attention:
 - **libfreenect2-metal's `TimestampAlignedFrameListener` didn't work** at 600cef5 on Windows: zero frame
   sets delivered even with a 500 ms window (frames only dropped), and with IR subscribed deleting the device
   crashed. ofxKinectV2's `Settings::alignByTimestamp` (uses it) is therefore **off by default**; the default
-  is the classic `SyncMultiFrameListener`. Retest it on macOS (the fork's tested platform); if it works
-  there, it's a Windows bug worth reporting upstream.
+  is the classic `SyncMultiFrameListener`. It works on macOS, so it's a Windows bug worth reporting
+  upstream.
 - **Colour timestamps run ~56 ms (446 ticks) ahead of depth**, and in low light the colour camera drops to
   15 fps (then the pairs alternate 56 / 89 ms). Captures then run at 15 fps (pairs follow the colour rate):
   light the scene well for 30 fps.

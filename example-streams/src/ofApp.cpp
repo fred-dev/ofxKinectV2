@@ -51,7 +51,7 @@ void ofApp::setup()
 	ofLogNotice(__FUNCTION__) << "Found " << devices.size() << " Kinect v2 devices.";
 
 	ofxKinectV2::Settings settings;
-	settings.pipeline = ofxKinectV2::PacketPipelineType::DEFAULT; // CUDA, else OpenCL, else CPU
+	settings.pipeline = ofxKinectV2::PacketPipelineType::DEFAULT; // Metal (macOS), else CUDA, else OpenCL, else CPU
 	settings.enableRGB = true;
 	settings.enableIR = true;
 	settings.enableDepth = true;

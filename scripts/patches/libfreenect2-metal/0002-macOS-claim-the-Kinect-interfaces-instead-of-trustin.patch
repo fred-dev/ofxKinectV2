@@ -1,0 +1,78 @@
+From f740cc3f76e2d4d5f97955200333973cee934dcd Mon Sep 17 00:00:00 2001
+From: Frederick Rodrigues <fredaudio@gmail.com>
+Date: Fri, 16 Oct 2026 03:24:20 +1100
+Subject: [PATCH 2/2] macOS: claim the Kinect interfaces instead of trusting
+ kernel_driver_active
+
+libusb's macOS backend reports "kernel driver active" for any child of the
+interface in the IO registry: another process's user client (Logitech
+G HUB's agent opens every USB device) or entries that exist only while
+macOS re-matches the interfaces after the Kinect re-enumerates (which it
+does on every close). The pre-check made 2 of 3 opens fail on an M3
+Ultra with nothing else using the device. There are no kernel drivers for
+these interfaces on macOS, so claim directly and retry for up to 2 s on
+ACCESS / BUSY; on failure, name the likely cause. Other platforms keep the
+pre-check.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/usb_control.cpp | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+
+diff --git a/src/usb_control.cpp b/src/usb_control.cpp
+index fb16b73..2eb2034 100644
+--- a/src/usb_control.cpp
++++ b/src/usb_control.cpp
+@@ -29,6 +29,7 @@
+ #include <libfreenect2/protocol/usb_control.h>
+ #include <libfreenect2/logging.h>
+ #include <libfreenect2/usb/error.h>
++#include <libfreenect2/threading.h>
+ 
+ #include <stdint.h>
+ 
+@@ -227,6 +228,33 @@ UsbControl::ResultCode UsbControl::claimInterfaces()
+   for (size_t i = 0; i < sizeof(interface_ids) / sizeof(interface_ids[0]); ++i)
+   {
+     const int interface_id = interface_ids[i];
++#ifdef __APPLE__
++    // libusb's macOS backend reports "kernel driver active" for any child of
++    // the interface in the IO registry: another process's user client (e.g.
++    // Logitech G HUB's agent opens every USB device) or entries that exist
++    // only while macOS re-matches the interfaces after a reset or a
++    // configuration change. There are no kernel drivers for these
++    // interfaces, so claim directly, retrying for a short while to ride out
++    // the re-matching.
++    int result = LIBUSB_ERROR_OTHER;
++    for (int attempt = 0; attempt < 20; ++attempt)
++    {
++      result = libusb_claim_interface(handle_, interface_id);
++      if (result == LIBUSB_SUCCESS || (result != LIBUSB_ERROR_ACCESS && result != LIBUSB_ERROR_BUSY))
++        break;
++      this_thread::sleep_for(chrono::milliseconds(100));
++    }
++    if (result != LIBUSB_SUCCESS)
++    {
++      LOG_ERROR << "failed to claim Kinect " << interface_names[i] << " interface " << interface_id
++                << ": " << usb::formatInterfaceClaimError(result)
++                << (libusb_kernel_driver_active(handle_, interface_id) == 1
++                        ? " (another process has the interface open: quit apps that grab USB "
++                          "devices, such as Logitech G HUB)"
++                        : "");
++      return Error;
++    }
++#else
+     const int driver_active = libusb_kernel_driver_active(handle_, interface_id);
+     if (driver_active == 1)
+     {
+@@ -249,6 +277,7 @@ UsbControl::ResultCode UsbControl::claimInterfaces()
+                 << ": " << usb::formatInterfaceClaimError(result);
+       return Error;
+     }
++#endif
+   }
+   return Success;
+ }
+-- 
+2.54.0 (Apple Git-157)
+

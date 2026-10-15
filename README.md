@@ -17,7 +17,8 @@ SDK 2.0 is not needed, so any number of Kinects can be used on one machine, band
 - Depth decoding on the GPU: Metal (macOS), CUDA or OpenCL (or CPU), picked automatically with fallback
   (`PacketPipelineType::DEFAULT`); pipelines that can't run on the machine are skipped before the device is opened.
 - Colour JPEG decoder choice (`Settings::jpegDecoder`: TurboJPEG, VideoToolbox on macOS, VA-API on Linux), with fallback to
-  TurboJPEG.
+  TurboJPEG. On macOS the default is VideoToolbox: the colour stream is decoded in hardware (~1 ms of CPU per frame on Apple
+  Silicon instead of 3-12 ms).
 - Colour (1920 x 1080), depth, IR, colour registered to depth, all un-mirrored (libfreenect2 hands out mirror images).
 - Point cloud or triangulated mesh with normals, built on the capture thread:
   - metres, camera space with +X right, +Y down, +Z forward - the same as ofxK4a;
@@ -49,10 +50,20 @@ libfreenect2-metal 0.4 is prebuilt in `libs/libfreenect2` (x64, Release and Debu
 rebuild with `scripts/build_libfreenect2_windows.ps1`). The project generator links it and copies its DLLs, including the CUDA
 runtime, next to the exe. The CUDA pipeline needs an NVIDIA driver; without one the OpenCL or CPU pipeline is used.
 
-### macOS / Linux
+### macOS
 
-Build libfreenect2 with the scripts in [`scripts/`](scripts/README.md) first - they use the same options as the Windows build
-and install headers and libraries into `libs/libfreenect2/{include,lib}/<platform>`.
+libfreenect2-metal 0.4 is prebuilt in `libs/libfreenect2` (static, universal arm64 + x86_64, macOS 11.0+; Metal + OpenCL + OpenGL +
+CPU pipelines, VideoToolbox + TurboJPEG). Generate the project with the projectGenerator; nothing else to set up, except on
+**Xcode 27**, which refuses OF's default deployment target: set `MACOSX_DEPLOYMENT_TARGET = 12.0` in `Project.xcconfig`.
+Rebuild the library with `scripts/build_libfreenect2_macos.sh` (it needs two patches on libfreenect2-metal, see
+[`scripts/README.md`](scripts/README.md#macos)).
+
+Tested on Apple Silicon (M3 Ultra) with a Kinect; the x86_64 build was run under Rosetta, not yet on an Intel Mac.
+
+### Linux
+
+Build libfreenect2 with [`scripts/build_libfreenect2_linux.sh`](scripts/README.md) first - it uses the same options as the Windows
+build and installs headers and libraries into `libs/libfreenect2/{include,lib}/linux64`.
 
 ## Usage
 
@@ -128,12 +139,14 @@ cost (and the GPU upload) on machines with many cameras.
 - Changing the bilateral / edge-aware depth filters or the depth clip range needs a reopen (`Settings`), as libfreenect2 rebuilds
   its GPU programs for them.
 - `Settings::alignByTimestamp` (pair colour and depth by device timestamp, libfreenect2-metal's
-  `TimestampAlignedFrameListener`) is experimental and off: with libfreenect2-metal 0.4 on Windows it delivered no frames.
+  `TimestampAlignedFrameListener`) is experimental and off: with libfreenect2-metal 0.4 on Windows it delivered no frames
+  (on macOS it works).
   Colour timestamps also run ~56 ms ahead of depth. See `scripts/HANDOFF_MAC_LINUX.md`.
 - Debug builds link `freenect2d` (libfreenect2's C++ API passes `std::string` across the DLL boundary, so Debug and Release
   can't be mixed).
 - macOS: the Kinect must show up under SuperSpeed in System Information > USB; if not, replug the power while leaving USB
-  connected.
+  connected. Apps that open every USB device (Logitech G HUB) stop libfreenect2 claiming the Kinect: quit them. The Kinect
+  re-enumerates on the bus each time it is closed, so a reopen takes a second or two.
 
 Based on the excellent work by the [libfreenect2](https://github.com/OpenKinect/libfreenect2) team (@JoshBlake @floe and
 @christiankerl plus others). Original addon by Theo Watson.

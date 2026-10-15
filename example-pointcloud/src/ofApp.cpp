@@ -20,7 +20,7 @@ void ofApp::setup()
 	kinectDevice = std::make_shared<ofxKinectV2>();
 
 	ofxKinectV2::Settings kinectSettings;
-	kinectSettings.pipeline = ofxKinectV2::PacketPipelineType::DEFAULT; // CUDA, else OpenCL, else CPU
+	kinectSettings.pipeline = ofxKinectV2::PacketPipelineType::DEFAULT; // Metal (macOS), else CUDA, else OpenCL, else CPU
 	kinectSettings.enableRGB = true;
 	kinectSettings.enableIR = false;
 	kinectSettings.enableDepth = true;

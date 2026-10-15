@@ -74,14 +74,16 @@ public:
 
         /// Colour JPEG decoder (libfreenect2-metal): DEFAULT, TURBOJPEG (CPU), VIDEOTOOLBOX
         /// (macOS hardware) or VAAPI (Linux, Intel). A hardware decoder that fails falls back
-        /// to TurboJPEG.
+        /// to TurboJPEG. DEFAULT is VideoToolbox on macOS (~1 ms of CPU per frame on Apple
+        /// Silicon instead of 3-12 ms) and TurboJPEG on Windows / Linux.
         JpegDecoder jpegDecoder = JpegDecoder::DEFAULT;
         /// EXPERIMENTAL - leave off. Pair each depth frame with the colour frame nearest in
         /// device time (libfreenect2-metal's TimestampAlignedFrameListener) instead of the
         /// latest of each. With libfreenect2-metal 0.4 (600cef5) on Windows it delivered no
-        /// frames at all, even with a 500 ms window, and crashed when the device was deleted;
-        /// colour timestamps also run a constant ~56 ms ahead of depth, so "nearest" isn't
-        /// "same moment". Retest on macOS / newer versions before relying on it.
+        /// frames at all, even with a 500 ms window, and crashed when the device was deleted.
+        /// On macOS it works (30 fps, clean close). Colour timestamps run a constant ~56 ms
+        /// ahead of depth, so "nearest" isn't "same moment": with a window under 56 ms it
+        /// pairs with the neighbouring colour frame instead.
         bool alignByTimestamp = false;
         float maxFrameDeltaMs = 25.f;
     };
